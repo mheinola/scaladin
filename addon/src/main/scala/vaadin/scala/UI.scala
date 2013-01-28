@@ -17,7 +17,7 @@ object UI {
  * @author Henri Kerola / Vaadin
  */
 abstract class UI(override val p: WrappedVaadinUI)
-    extends AbstractSingleComponentContainer(p) with DelayedInit {
+  extends AbstractSingleComponentContainer(p) with DelayedInit {
 
   private[this] var initCode: Option[() => Unit] = None
 
@@ -87,7 +87,11 @@ abstract class UI(override val p: WrappedVaadinUI)
     val p = UI.this.p.getPage
   }
 
-  // TODO: setNavigator
+  def navigator: Option[Navigator] = wrapperFor[Navigator](p.getNavigator())
+  def navigator_=(navigator: Navigator): Unit = navigator_=(Option(navigator))
+  def navigator_=(navigator: Option[Navigator]): Unit = {
+    navigator.map(n => p.setNavigator(n.p))
+  }
 
   def lastHeartbeatTimestamp: Long = p.getLastHeartbeatTimestamp
 
