@@ -18,6 +18,13 @@ object BuildSettings {
     scalaVersion := buildScalaVersion,
     scalacOptions ++= Seq("-deprecation", "-unchecked", "-encoding", "UTF-8"),
     resolvers := Seq("Vaadin Snapshots" at "https://oss.sonatype.org/content/repositories/vaadin-snapshots/"),
+    publishMavenStyle := true,
+    pomIncludeRepository := { _ => false },
+    publishTo := Some("Sonatype Nexus Repository Manager" at System.getProperty("nexusRepositoryUrl", "none")),
+    credentials += Credentials("Sonatype Nexus Repository Manager",
+                           System.getProperty("nexusUrl", "none"),
+                           System.getProperty("nexusUser", "none"),
+                           System.getProperty("nexusPassword", "none")),
     autoScalaLibrary := true,
     offline := false)
 
