@@ -43,10 +43,6 @@ object Navigator {
         container.removeAllComponents
         container.addComponent(c)
       }
-      case c: com.vaadin.ui.Component => {
-        container.removeAllComponents
-        container.addComponent(c)
-      }
       case _ => throw new IllegalArgumentException("View is not a component: " + v);
     }
   }
@@ -56,10 +52,7 @@ object Navigator {
       new com.vaadin.navigator.Navigator.SingleComponentContainerViewDisplay(container.p) with SingleComponentContainerViewDisplayMixin
 
     def showView(v: View): Unit = v match {
-      case c: Component => {
-        container.content_=(c)
-      }
-      case c: com.vaadin.ui.Component => container.content_=(c)
+      case c: Component => container.content_=(c)
       case _ => throw new IllegalArgumentException("View is not a component: " + v);
     }
   }
