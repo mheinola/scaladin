@@ -117,4 +117,15 @@ class UITests extends FunSuite with BeforeAndAfter {
     ui.resizeLazy = true
     assert(ui.resizeLazy)
   }
+
+  test("navigator") {
+    assert(ui.navigator.isEmpty)
+    assert(ui.p.getNavigator() == null)
+    ui.navigator = Navigator(ui, new VerticalLayout {})
+    assert(ui.navigator.isDefined)
+    assert(ui.p.getNavigator() != null)
+    ui.navigator = None
+    assert(ui.navigator.isEmpty)
+    assert(ui.p.getNavigator() == null)
+  }
 }
