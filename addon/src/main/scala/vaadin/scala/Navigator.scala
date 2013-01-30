@@ -6,6 +6,7 @@ import vaadin.scala.mixins.ComponentContainerViewDisplayMixin
 import vaadin.scala.mixins.SingleComponentContainerViewDisplayMixin
 import vaadin.scala.mixins.StaticViewProviderMixin
 import vaadin.scala.mixins.ClassBasedViewProviderMixin
+import vaadin.scala.mixins.NavigationStateManagerMixin
 import vaadin.scala.mixins.NavigatorMixin
 import vaadin.scala.mixins.PanelMixin
 import vaadin.scala.internal.ListenersTrait
@@ -25,7 +26,11 @@ package mixins {
   }
   trait ViewDisplayMixin extends ScaladinMixin with com.vaadin.navigator.ViewDisplay
   trait ViewProviderMixin extends ScaladinMixin with com.vaadin.navigator.ViewProvider
-  trait NavigationStateManagerMixin extends ScaladinMixin with com.vaadin.navigator.NavigationStateManager
+  trait NavigationStateManagerMixin extends ScaladinMixin { self: com.vaadin.navigator.NavigationStateManager =>
+    def getState(): String = wrapper.asInstanceOf[Navigator.NavigationStateManager].state
+    def setNavigator(n: com.vaadin.navigator.Navigator): Unit = wrapper.asInstanceOf[Navigator.NavigationStateManager].navigator_=(WrapperUtil.wrapperFor(n))
+    def setState(s: String): Unit = wrapper.asInstanceOf[Navigator.NavigationStateManager].state = s
+  }
 
   trait EmptyViewMixin extends CssLayoutMixin with ViewMixin { self: com.vaadin.navigator.Navigator.EmptyView => }
   trait UriFragmentManagerMixin extends NavigationStateManagerMixin { self: com.vaadin.navigator.Navigator.UriFragmentManager => }
@@ -95,45 +100,47 @@ object Navigator {
   //    override def p: com.vaadin.navigator.Navigator.ClassBasedViewProvider with ClassBasedViewProviderMixin = new com.vaadin.navigator.Navigator.ClassBasedViewProvider(viewName, viewClass) with ClassBasedViewProviderMixin
   //  }
 
-  trait NavigationStateManager extends com.vaadin.navigator.NavigationStateManager {
+  trait NavigationStateManager extends Wrapper { navigationStateManager =>
+    def p: com.vaadin.navigator.NavigationStateManager
 
     def navigator: Option[Navigator]
     def navigator_=(n: Navigator): Unit = navigator_=(Some(n))
-    def navigator_=(n: Option[Navigator]): Unit
-
-    override def getState(): String = state
-
-    def state: String
-
+    def navigator_=(n: Option[Navigator]): Unit = { p.setNavigator(n.map(_.p).getOrElse(null)) }
+    def state: String = p.getState()
+    def state_=(s: String): Unit = state_=(Some(s))
+    def state_=(s: Option[String]): Unit = p.setState(s.getOrElse(null))
   }
 
-  class UriFragmentManager(val page: Page, override var navigator: Option[Navigator] = None)
-      extends UriFragmentChangedListener(action = (event: Page.UriFragmentChangedEvent) => navigator.map(_.navigateTo("")))
-      with NavigationStateManager {
+  class UriFragmentManager(val page: Page, var optNav: Option[Navigator] = None) extends NavigationStateManager {
+    override val p = new com.vaadin.navigator.NavigationStateManager with NavigationStateManagerMixin
+    p.wrapper = this
 
-    page.p.addUriFragmentChangedListener(this)
+    var listener: Option[UriFragmentChangedListener] = None
 
-    override def setNavigator(navigator: com.vaadin.navigator.Navigator): Unit = {
-      this.navigator = wrapperFor[Navigator](navigator)
+    override def navigator: Option[Navigator] = optNav
+    override def navigator_=(n: Option[Navigator]): Unit = {
+      optNav = n
+      navigator.map(n => {
+        listener.map(page.p.removeUriFragmentChangedListener)
+        listener = Some(new UriFragmentChangedListener((event) => uriFragmentChange(event)))
+        listener.map(page.p.addUriFragmentChangedListener)
+      })
     }
 
-    def state: String = page.uriFragment.map(fragment => {
+    private def uriFragmentChange(event: Page.UriFragmentChangedEvent): Unit = navigator.map(_.navigateTo(state))
+
+    override def state: String = page.uriFragment.map(fragment => {
       if (fragment == null || !fragment.startsWith("!")) {
         "";
       } else {
         fragment.substring(1);
       }
     }).getOrElse("")
+    override def state_=(s: Option[String]): Unit = fragment_=(fragment.getOrElse("") + "!" + s.getOrElse(""))
 
-    override def setState(state: String): Unit = setFragment(fragment = "!" + state)
-
-    override def uriFragmentChanged(e: com.vaadin.server.Page.UriFragmentChangedEvent): Unit = navigator.map(_.navigateTo(state))
-
-    def uriFragmentChanged(e: Page.UriFragmentChangedEvent): Unit = navigator.map(_.navigateTo(state))
-
-    protected def getFragment(): String = page.uriFragment.orNull
-
-    protected def setFragment(fragment: String): Unit = page.setUriFragment(fragment, false);
+    def fragment: Option[String] = page.uriFragment
+    def fragment_=(f: String): Unit = fragment_=(Some(f))
+    def fragment_=(f: Option[String]): Unit = page.setUriFragment(f, false)
 
   }
 
@@ -151,7 +158,7 @@ object Navigator {
  */
 class Navigator(val ui: UI, val display: Navigator.ViewDisplay) extends Wrapper { navigator =>
   val stateManager: Navigator.NavigationStateManager = new Navigator.UriFragmentManager(ui.page)
-  val p: com.vaadin.navigator.Navigator with NavigatorMixin = new com.vaadin.navigator.Navigator(ui.p, stateManager, display.p) with NavigatorMixin
+  val p: com.vaadin.navigator.Navigator with NavigatorMixin = new com.vaadin.navigator.Navigator(ui.p, stateManager.p, display.p) with NavigatorMixin
   p.wrapper = this
   stateManager.navigator = this
   def navigateTo(navigationState: String): Unit = p.navigateTo(navigationState)
