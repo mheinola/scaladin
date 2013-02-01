@@ -4,14 +4,13 @@ import vaadin.scala.mixins.ViewMixin
 import vaadin.scala.mixins.EmptyViewMixin
 import vaadin.scala.mixins.ComponentContainerViewDisplayMixin
 import vaadin.scala.mixins.SingleComponentContainerViewDisplayMixin
-import vaadin.scala.mixins.StaticViewProviderMixin
-import vaadin.scala.mixins.ClassBasedViewProviderMixin
 import vaadin.scala.mixins.NavigatorMixin
 import vaadin.scala.mixins.PanelMixin
 import internal._
+import scala._
+import scala.collection.JavaConversions._
+import scala.collection.mutable
 import scala.Some
-import collection.JavaConversions._
-import collection.mutable
 
 package mixins {
 
@@ -27,15 +26,12 @@ package mixins {
     }
   }
   trait ViewDisplayMixin extends ScaladinMixin with com.vaadin.navigator.ViewDisplay
-  trait ViewProviderMixin extends ScaladinMixin with com.vaadin.navigator.ViewProvider
   trait NavigationStateManagerMixin extends ScaladinMixin with com.vaadin.navigator.NavigationStateManager
 
   trait EmptyViewMixin extends CssLayoutMixin with ViewMixin { self: com.vaadin.navigator.Navigator.EmptyView => }
   trait UriFragmentManagerMixin extends NavigationStateManagerMixin { self: com.vaadin.navigator.Navigator.UriFragmentManager => }
   trait ComponentContainerViewDisplayMixin extends ViewDisplayMixin { self: com.vaadin.navigator.Navigator.ComponentContainerViewDisplay => }
   trait SingleComponentContainerViewDisplayMixin extends ViewDisplayMixin { self: com.vaadin.navigator.Navigator.SingleComponentContainerViewDisplay => }
-  trait StaticViewProviderMixin extends ViewProviderMixin
-  trait ClassBasedViewProviderMixin extends ViewProviderMixin
 
   trait NavigatorMixin extends ScaladinMixin { self: com.vaadin.navigator.Navigator =>
     override def fireBeforeViewChange(event: com.vaadin.navigator.ViewChangeListener.ViewChangeEvent): Boolean = {
@@ -64,13 +60,6 @@ object Navigator {
     def showView(v: Navigator.View): Unit
   }
 
-  trait ViewProvider extends Wrapper { viewProvider =>
-    def p: com.vaadin.navigator.ViewProvider
-
-    def viewName(viewAndParameters: String): String = p.getViewName(viewAndParameters)
-    def view(viewName: String): Navigator.View = wrapperFor[Navigator.View](p.getView(viewName)).get
-  }
-
   class EmptyView(override val p: com.vaadin.navigator.Navigator.EmptyView with EmptyViewMixin with com.vaadin.navigator.View with ViewMixin = new com.vaadin.navigator.Navigator.EmptyView with EmptyViewMixin with com.vaadin.navigator.View with ViewMixin) extends CssLayout with View { p.wrapper = this }
 
   // TODO: How to wrap the View interface from Vaadin to support any Layout?
@@ -97,17 +86,43 @@ object Navigator {
     }
   }
 
-  class StaticViewProvider(viewName: String, view: Navigator.View) extends ViewProvider {
-    override def p: com.vaadin.navigator.Navigator.StaticViewProvider with StaticViewProviderMixin = new com.vaadin.navigator.Navigator.StaticViewProvider(viewName, view.pView) with StaticViewProviderMixin
-  }
+  /**
+   * ViewProviders implement directly the Vaadin interface.
+   */
+  trait ViewProvider extends com.vaadin.navigator.ViewProvider {
+    override def getViewName(viewAndParameters: String): String = viewName(viewAndParameters).getOrElse(null)
+    override def getView(viewName: String): com.vaadin.navigator.View = view(viewName).map(_.pView).getOrElse(null)
 
-  class ClassBasedViewProvider(viewName: String, viewClass: Class[_ <: Navigator.View]) extends ViewProvider {
-    override def p: com.vaadin.navigator.Navigator.ClassBasedViewProvider with ClassBasedViewProviderMixin = {
-      val field = viewClass.getField("p")
-      new com.vaadin.navigator.Navigator.ClassBasedViewProvider(viewName, field.getType.asInstanceOf[Class[_ <: com.vaadin.navigator.View]]) with ClassBasedViewProviderMixin
+    def viewName: String
+    def viewInstance: Navigator.View
+    def viewName(viewAndParameters: String): Option[String] = {
+      if (viewAndParameters != null && (viewAndParameters == viewName || viewAndParameters.startsWith(viewName + "/"))) {
+        Some(viewName)
+      } else {
+        None
+      }
+    }
+    def view(viewName: String): Option[Navigator.View] = if (viewName == name) {
+      Some(viewInstance)
+    } else {
+      None
     }
   }
 
+  class StaticViewProvider(override val viewName: String, override val viewInstance: Navigator.View) extends ViewProvider
+
+  class ClassBasedViewProvider(override val viewName: String, viewClass: Class[_ <: Navigator.View]) extends ViewProvider {
+    override def viewInstance: Navigator.View = {
+      try { viewClass.newInstance() } catch {
+          case e: InstantiationException => throw new RuntimeException(e)
+          case e: IllegalAccessException => throw new RuntimeException(e)
+      }
+    }
+  }
+
+  /**
+   * State manager implements directly the Vaadin interface.
+   */
   trait NavigationStateManager extends com.vaadin.navigator.NavigationStateManager {
 
     def navigator: Option[Navigator]
@@ -184,13 +199,12 @@ class Navigator(val ui: UI, val display: Navigator.ViewDisplay) extends Wrapper 
     addProvider(provider)
   }
   def removeView(viewName: String): Unit = p.removeView(viewName)
-  def addProvider(provider: Navigator.ViewProvider): Unit = p.addProvider(provider.p)
-  def removeProvider(provider: Navigator.ViewProvider): Unit = p.removeProvider(provider.p)
+  def addProvider(provider: Navigator.ViewProvider): Unit = p.addProvider(provider)
+  def removeProvider(provider: Navigator.ViewProvider): Unit = p.removeProvider(provider)
 
-  def setErrorView(viewClass: Class[_ <: Navigator.View]): Unit = {
-    val field = viewClass.getField("p")
-    p.setErrorView(field.getType.asInstanceOf[Class[_ <: com.vaadin.navigator.View]])
-  }
+  // TODO: def setErrorView(viewClass: Class[_ <: Navigator.View]): Unit = {
+  //  p.setErrorView(viewClass)
+  //}
   def setErrorView(view: Navigator.View): Unit = p.setErrorView(view.pView)
 
   lazy val beforeViewChangeListeners = new DecisionListenersTrait[Navigator.ViewChangeEvent, ViewChangeListener] {
