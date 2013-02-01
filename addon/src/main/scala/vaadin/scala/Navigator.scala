@@ -178,7 +178,7 @@ class Navigator(val ui: UI, val display: Navigator.ViewDisplay) extends Wrapper 
   def state = stateManager.state
 
   def addView(viewName: String, view: Navigator.View): Unit = addViewProvider(viewName, new Navigator.StaticViewProvider(viewName, view))
-  def addView(viewName: String, viewClass: Class[_ <: Navigator.View with com.vaadin.navigator.View]): Unit = addViewProvider(viewName, new Navigator.ClassBasedViewProvider(viewName, viewClass))
+  def addView(viewName: String, viewClass: Class[_ <: Navigator.View]): Unit = addViewProvider(viewName, new Navigator.ClassBasedViewProvider(viewName, viewClass))
   private def addViewProvider(viewName: String, provider: Navigator.ViewProvider): Unit = {
     removeView(viewName)
     addProvider(provider)
@@ -193,18 +193,16 @@ class Navigator(val ui: UI, val display: Navigator.ViewDisplay) extends Wrapper 
   }
   def setErrorView(view: Navigator.View): Unit = p.setErrorView(view.pView)
 
-  val listeners = mutable.Set
-
   lazy val beforeViewChangeListeners = new DecisionListenersTrait[Navigator.ViewChangeEvent, ViewChangeListener] {
     val listenerSet: mutable.Set[ViewChangeListener] = mutable.HashSet()
-    override def listeners: java.util.Collection[_] = listenerSet // TODO p.getListeners
+    override def listeners: java.util.Collection[_] = listenerSet
     override def addListener(elem: Navigator.ViewChangeEvent => Boolean) = listenerSet.add(new BeforeViewChangeListener(elem)) //p.addViewChangeListener(new BeforeViewChangeListener(elem))
     override def removeListener(elem: ViewChangeListener) = listenerSet.remove(elem) // p.removeViewChangeListener(elem)
   }
 
   lazy val afterViewChangeListeners = new ListenersTrait[Navigator.ViewChangeEvent, ViewChangeListener] {
     val listenerSet: mutable.Set[ViewChangeListener] = mutable.HashSet()
-    override def listeners: java.util.Collection[_] = listenerSet // TODO p.getListeners
+    override def listeners: java.util.Collection[_] = listenerSet
     override def addListener(elem: Navigator.ViewChangeEvent => Unit) = listenerSet.add(new AfterViewChangeListener(elem)) //p.addViewChangeListener(new AfterViewChangeListener(elem))
     override def removeListener(elem: ViewChangeListener) = listenerSet.remove(elem) // p.removeViewChangeListener(elem)
   }
