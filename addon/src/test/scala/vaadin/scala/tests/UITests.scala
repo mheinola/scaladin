@@ -6,8 +6,6 @@ import vaadin.scala.internal.WrappedVaadinUI
 import org.scalatest.BeforeAndAfter
 import org.junit.runner.RunWith
 import org.scalatest.junit.JUnitRunner
-import org.mockito.Mockito
-import scala.Some
 import scala.Some
 
 @RunWith(classOf[JUnitRunner])
