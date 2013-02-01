@@ -12,8 +12,9 @@ class DemoUI extends UI(title = "Hello World") {
 
   override def init(request: ScaladinRequest): Unit = {
     val navigator = Navigator(this, contentLayout)
-    navigator.addView(DemoView1.NAME, new DemoView1);
-    navigator.addView(DemoView2.NAME, new DemoView2);
+    navigator.addView(DemoView1.NAME, new DemoView1)
+    navigator.addView(DemoView2.NAME, new DemoView2)
+    navigator.addView(DemoView2.NAME+"static", classOf[DemoView2])
 
     navigator_=(navigator)
 
@@ -41,6 +42,7 @@ class DemoUI extends UI(title = "Hello World") {
     val menuBar = new MenuBar {
       addItem("DemoView1", (e: MenuBar.MenuItem) => navigator.navigateTo(DemoView1.NAME))
       addItem("DemoView2", (e: MenuBar.MenuItem) => navigator.navigateTo(DemoView2.NAME))
+      addItem("StaticDemoView2", (e: MenuBar.MenuItem) => navigator.navigateTo(DemoView2.NAME+"static"))
     }
     addComponent(menuBar)
   }
