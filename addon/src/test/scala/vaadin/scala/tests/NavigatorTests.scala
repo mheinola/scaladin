@@ -62,4 +62,42 @@ class NavigatorTests extends ScaladinTestSuite {
 
   }
 
+  test("ComponentContainerViewDisplay.showView") {
+    val componentMock = mock[ComponentContainer]
+    val testView = new TestView1
+    val cc = new Navigator.ComponentContainerViewDisplay(componentMock)
+    cc.showView(testView)
+    Mockito.verify(componentMock).p
+    Mockito.verify(componentMock).removeAllComponents
+    Mockito.verify(componentMock).addComponent(testView)
+  }
+
+  test("SingleComponentContainerViewDisplay.showView") {
+    val componentMock = mock[Panel]
+    val testView = new TestView1
+    val cc = new Navigator.SingleComponentContainerViewDisplay(componentMock)
+    cc.showView(testView)
+    Mockito.verify(componentMock).content_=(testView)
+  }
+
+  ignore("UriFragmentManager.state") {
+    // TODO
+  }
+
+  ignore("Navigator.ClassBasedViewProvider") {
+    // TODO
+  }
+
+  ignore("Navigator.addView with ClassBasedViewProvider") {
+    // TODO
+  }
+
+  ignore("Navigator.setErrorView with ClassBasedViewProvider") {
+    // TODO
+  }
+
+  ignore("Navigator.viewChangeListeners.listeners") {
+    // TODO
+  }
+
 }

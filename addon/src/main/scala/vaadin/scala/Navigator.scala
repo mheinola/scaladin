@@ -8,19 +8,22 @@ import vaadin.scala.mixins.StaticViewProviderMixin
 import vaadin.scala.mixins.ClassBasedViewProviderMixin
 import vaadin.scala.mixins.NavigatorMixin
 import vaadin.scala.mixins.PanelMixin
-import vaadin.scala.internal.ListenersTrait
-import vaadin.scala.internal.UriFragmentChangedListener
-import vaadin.scala.internal.BeforeViewChangeListener
-import vaadin.scala.internal.AfterViewChangeListener
-import vaadin.scala.internal.ViewChangeListener
-import vaadin.scala.internal.WrapperUtil
+import internal._
+import scala.Some
+import collection.JavaConversions._
+import collection.mutable
 
 package mixins {
 
   trait ViewMixin extends ScaladinMixin { self: com.vaadin.navigator.View =>
     override def enter(e: com.vaadin.navigator.ViewChangeListener.ViewChangeEvent): Unit = {
       // FIXME asInstanceOf
-      wrapper.asInstanceOf[Navigator.View].enter(Navigator.ViewChangeEvent(WrapperUtil.wrapperFor(e.getNavigator()).get, WrapperUtil.wrapperFor(e.getOldView()).getOrElse(null), WrapperUtil.wrapperFor(e.getNewView()).get, e.getViewName(), e.getParameters()))
+      wrapper.asInstanceOf[Navigator.View].enter(Navigator.ViewChangeEvent(
+        WrapperUtil.wrapperFor(e.getNavigator()).get,
+        WrapperUtil.wrapperFor(e.getOldView()).getOrElse(null),
+        WrapperUtil.wrapperFor(e.getNewView()).get,
+        e.getViewName(),
+        e.getParameters()))
     }
   }
   trait ViewDisplayMixin extends ScaladinMixin with com.vaadin.navigator.ViewDisplay
@@ -34,7 +37,15 @@ package mixins {
   trait StaticViewProviderMixin extends ViewProviderMixin
   trait ClassBasedViewProviderMixin extends ViewProviderMixin
 
-  trait NavigatorMixin extends ScaladinMixin { self: com.vaadin.navigator.Navigator => }
+  trait NavigatorMixin extends ScaladinMixin { self: com.vaadin.navigator.Navigator =>
+    override def fireBeforeViewChange(event: com.vaadin.navigator.ViewChangeListener.ViewChangeEvent): Boolean = {
+      !wrapper.asInstanceOf[Navigator].beforeViewChangeListeners.listenerSet.exists(listener => !listener.beforeViewChange(event))
+    }
+
+    override def fireAfterViewChange(event: com.vaadin.navigator.ViewChangeListener.ViewChangeEvent): Unit = {
+      wrapper.asInstanceOf[Navigator].afterViewChangeListeners.listenerSet.foreach(listener => listener.afterViewChange(event))
+    }
+  }
 }
 
 object Navigator {
@@ -50,7 +61,7 @@ object Navigator {
   trait ViewDisplay extends Wrapper { viewDisplay =>
     def p: com.vaadin.navigator.ViewDisplay
 
-    def showView(v: Navigator.View): Unit = p.showView(v.pView)
+    def showView(v: Navigator.View): Unit
   }
 
   trait ViewProvider extends Wrapper { viewProvider =>
@@ -90,10 +101,12 @@ object Navigator {
     override def p: com.vaadin.navigator.Navigator.StaticViewProvider with StaticViewProviderMixin = new com.vaadin.navigator.Navigator.StaticViewProvider(viewName, view.pView) with StaticViewProviderMixin
   }
 
-  // TODO:
-  //  class ClassBasedViewProvider[T <: Navigator.View](viewName: String, viewClass: Class[T]) extends ViewProvider {
-  //    override def p: com.vaadin.navigator.Navigator.ClassBasedViewProvider with ClassBasedViewProviderMixin = new com.vaadin.navigator.Navigator.ClassBasedViewProvider(viewName, viewClass) with ClassBasedViewProviderMixin
-  //  }
+  class ClassBasedViewProvider(viewName: String, viewClass: Class[_ <: Navigator.View]) extends ViewProvider {
+    override def p: com.vaadin.navigator.Navigator.ClassBasedViewProvider with ClassBasedViewProviderMixin = {
+      val field = viewClass.getField("p")
+      new com.vaadin.navigator.Navigator.ClassBasedViewProvider(viewName, field.getType.asInstanceOf[Class[_ <: com.vaadin.navigator.View]]) with ClassBasedViewProviderMixin
+    }
+  }
 
   trait NavigationStateManager extends com.vaadin.navigator.NavigationStateManager {
 
@@ -133,7 +146,9 @@ object Navigator {
 
     protected def getFragment(): String = page.uriFragment.orNull
 
-    protected def setFragment(fragment: String): Unit = page.setUriFragment(fragment, false);
+    protected def setFragment(fragment: String): Unit = {
+      page.setUriFragment(fragment, false)
+    }
 
   }
 
@@ -150,34 +165,48 @@ object Navigator {
  * @author Matti Heinola / Viklo
  */
 class Navigator(val ui: UI, val display: Navigator.ViewDisplay) extends Wrapper { navigator =>
+
   val stateManager: Navigator.NavigationStateManager = new Navigator.UriFragmentManager(ui.page)
   val p: com.vaadin.navigator.Navigator with NavigatorMixin = new com.vaadin.navigator.Navigator(ui.p, stateManager, display.p) with NavigatorMixin
   p.wrapper = this
   stateManager.navigator = this
-  def navigateTo(navigationState: String): Unit = p.navigateTo(navigationState)
+
+  def navigateTo(navigationState: String): Unit = {
+    p.navigateTo(navigationState)
+  }
 
   def state = stateManager.state
 
-  def addView(viewName: String, view: Navigator.View): Unit = {
+  def addView(viewName: String, view: Navigator.View): Unit = addViewProvider(viewName, new Navigator.StaticViewProvider(viewName, view))
+  def addView(viewName: String, viewClass: Class[_ <: Navigator.View with com.vaadin.navigator.View]): Unit = addViewProvider(viewName, new Navigator.ClassBasedViewProvider(viewName, viewClass))
+  private def addViewProvider(viewName: String, provider: Navigator.ViewProvider): Unit = {
     removeView(viewName)
-    p.addProvider(new Navigator.StaticViewProvider(viewName, view).p)
+    addProvider(provider)
   }
-  // TODO: def addView[T <: Navigator.View](viewName: String, viewClass: Class[T]): Unit = p.addProvider(new Navigator.ClassBasedViewProvider(viewName, viewClass))
   def removeView(viewName: String): Unit = p.removeView(viewName)
+  def addProvider(provider: Navigator.ViewProvider): Unit = p.addProvider(provider.p)
+  def removeProvider(provider: Navigator.ViewProvider): Unit = p.removeProvider(provider.p)
 
-  def addProvider(provider: Navigator.ViewProvider): Unit = p.addProvider(provider.p.asInstanceOf[com.vaadin.navigator.ViewProvider])
-  def removeProvider(provider: Navigator.ViewProvider): Unit = p.removeProvider(provider.p.asInstanceOf[com.vaadin.navigator.ViewProvider])
-
-  // TODO: def setErrorView[T <: Navigator.View](viewClass: Class[T]): Unit = p.setErrorView(viewClass)
+  def setErrorView(viewClass: Class[_ <: Navigator.View]): Unit = {
+    val field = viewClass.getField("p")
+    p.setErrorView(field.getType.asInstanceOf[Class[_ <: com.vaadin.navigator.View]])
+  }
   def setErrorView(view: Navigator.View): Unit = p.setErrorView(view.pView)
 
-  lazy val viewChangeListeners = new ListenersTrait[Navigator.ViewChangeEvent, ViewChangeListener] {
-    override def listeners = null // TODO p.getListeners(classOf[com.vaadin.ui.Window.CloseListener])
-    // TODO: Only AfterViewChangeListener can be added using the ListenersTrait
-    override def addListener(elem: Navigator.ViewChangeEvent => Unit) = addAfterViewChangeListener(elem)
-    def addBeforeViewChangeListener(elem: Navigator.ViewChangeEvent => Boolean) = p.addViewChangeListener(new BeforeViewChangeListener(elem))
-    def addAfterViewChangeListener(elem: Navigator.ViewChangeEvent => Unit) = p.addViewChangeListener(new AfterViewChangeListener(elem))
-    override def removeListener(elem: ViewChangeListener) = p.removeViewChangeListener(elem)
+  val listeners = mutable.Set
+
+  lazy val beforeViewChangeListeners = new DecisionListenersTrait[Navigator.ViewChangeEvent, ViewChangeListener] {
+    val listenerSet: mutable.Set[ViewChangeListener] = mutable.HashSet()
+    override def listeners: java.util.Collection[_] = listenerSet // TODO p.getListeners
+    override def addListener(elem: Navigator.ViewChangeEvent => Boolean) = listenerSet.add(new BeforeViewChangeListener(elem)) //p.addViewChangeListener(new BeforeViewChangeListener(elem))
+    override def removeListener(elem: ViewChangeListener) = listenerSet.remove(elem) // p.removeViewChangeListener(elem)
+  }
+
+  lazy val afterViewChangeListeners = new ListenersTrait[Navigator.ViewChangeEvent, ViewChangeListener] {
+    val listenerSet: mutable.Set[ViewChangeListener] = mutable.HashSet()
+    override def listeners: java.util.Collection[_] = listenerSet // TODO p.getListeners
+    override def addListener(elem: Navigator.ViewChangeEvent => Unit) = listenerSet.add(new AfterViewChangeListener(elem)) //p.addViewChangeListener(new AfterViewChangeListener(elem))
+    override def removeListener(elem: ViewChangeListener) = listenerSet.remove(elem) // p.removeViewChangeListener(elem)
   }
 
 }

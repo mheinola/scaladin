@@ -2,11 +2,13 @@ package vaadin.scala.tests
 
 import org.scalatest.FunSuite
 import vaadin.scala._
-import internal.WrappedVaadinUI
+import vaadin.scala.internal.WrappedVaadinUI
 import org.scalatest.BeforeAndAfter
 import org.junit.runner.RunWith
 import org.scalatest.junit.JUnitRunner
 import org.mockito.Mockito
+import scala.Some
+import scala.Some
 
 @RunWith(classOf[JUnitRunner])
 class UITests extends FunSuite with BeforeAndAfter {
@@ -121,11 +123,17 @@ class UITests extends FunSuite with BeforeAndAfter {
   test("navigator") {
     assert(ui.navigator.isEmpty)
     assert(ui.p.getNavigator() == null)
-    ui.navigator = Navigator(ui, new VerticalLayout {})
-    assert(ui.navigator.isDefined)
-    assert(ui.p.getNavigator() != null)
-    ui.navigator = None
-    assert(ui.navigator.isEmpty)
-    assert(ui.p.getNavigator() == null)
+
+    val nui = new UI {
+      override def init(request: ScaladinRequest) {
+      }
+      def setNavigator(n: Option[Navigator]): Unit = super.navigator_=(n)
+    }
+    nui.setNavigator(Some(Navigator(nui, new VerticalLayout {})))
+    assert(nui.navigator.isDefined)
+    assert(nui.p.getNavigator() != null)
+    nui.setNavigator(None)
+    assert(nui.navigator.isEmpty)
+    assert(nui.p.getNavigator() == null)
   }
 }
