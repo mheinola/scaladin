@@ -88,8 +88,10 @@ abstract class UI(override val p: WrappedVaadinUI)
   }
 
   def navigator: Option[Navigator] = wrapperFor[Navigator](p.getNavigator())
-  def navigator_=(navigator: Navigator): Unit = navigator_=(Option(navigator))
-  def navigator_=(navigator: Option[Navigator]): Unit = p.setNavigator(navigator.map(_.p).getOrElse(null))
+
+  // Can be used in init if subclasses override
+  protected def navigator_=(n: Navigator): Unit = navigator_=(Option(n))
+  protected def navigator_=(n: Option[Navigator]): Unit = p.setNavigator(n.map(_.p).getOrElse(null))
 
   def lastHeartbeatTimestamp: Long = p.getLastHeartbeatTimestamp
 
