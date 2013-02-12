@@ -102,7 +102,7 @@ object Navigator {
         None
       }
     }
-    def view(viewName: String): Option[Navigator.View] = if (viewName == name) {
+    def view(name: String): Option[Navigator.View] = if (viewName == name) {
       Some(viewInstance)
     } else {
       None
