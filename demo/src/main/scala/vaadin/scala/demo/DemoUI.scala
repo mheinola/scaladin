@@ -12,9 +12,8 @@ class DemoUI extends UI(title = "Hello World") {
 
   override def init(request: ScaladinRequest): Unit = {
     val navigator = Navigator(this, contentLayout)
-    navigator.addView(DemoView1.NAME, new DemoView1)
-    navigator.addView(DemoView2.NAME, new DemoView2)
-    navigator.addView(DemoView2.NAME+"static", classOf[DemoView2])
+    navigator.addView(DemoView.VIEW1, new DemoView)
+    navigator.addView(DemoView.VIEW2, classOf[DemoView])
 
     navigator_=(navigator)
 
@@ -40,27 +39,25 @@ class DemoUI extends UI(title = "Hello World") {
     width = 100 pct;
     height = 25 px;
     val menuBar = new MenuBar {
-      addItem("DemoView1", (e: MenuBar.MenuItem) => navigator.navigateTo(DemoView1.NAME))
-      addItem("DemoView2", (e: MenuBar.MenuItem) => navigator.navigateTo(DemoView2.NAME))
-      addItem("StaticDemoView2", (e: MenuBar.MenuItem) => navigator.navigateTo(DemoView2.NAME+"static"))
+      addItem("DemoView1", (e: MenuBar.MenuItem) => navigator.navigateTo(DemoView.VIEW1))
+      addItem("DemoView2", (e: MenuBar.MenuItem) => navigator.navigateTo(DemoView.VIEW2))
     }
     addComponent(menuBar)
   }
 
 }
 
-object DemoView1 {
-  val NAME = ""
+object DemoView {
+  val VIEW1 = ""
+  val VIEW2 = "ClassBasedView"
 }
-
-class DemoView1 extends Navigator.PanelView {
-
+class DemoView extends Navigator.PanelView {
+  val label = Label("Hello from DemoView")
   def init: Unit = {
 
     val layout = new VerticalLayout() {
       sizeFull
-      add(Label("Hello from DemoView1"))
-      add(Label("I'm vertical"))
+      add(label)
     }
     layout.margin = true
     content = layout
@@ -68,29 +65,7 @@ class DemoView1 extends Navigator.PanelView {
   init
 
   override def enter(event: Navigator.ViewChangeEvent): Unit = {
-
-  }
-}
-
-object DemoView2 {
-  val NAME = "demo2"
-}
-
-class DemoView2 extends Navigator.PanelView {
-
-  def init: Unit = {
-
-    val layout = new HorizontalLayout() {
-      sizeFull
-      add(Label("Hello from DemoView2"))
-      add(Label("I'm horizontal"))
-    }
-    layout.margin = true
-    content = layout
-  }
-  init
-
-  override def enter(event: Navigator.ViewChangeEvent): Unit = {
-    Notification.show("Entering DemoView2");
+    label.value = "Hello from view " + event.viewName
+    Notification.show("Entering view " + event.viewName)
   }
 }
