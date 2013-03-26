@@ -1,5 +1,6 @@
 package vaadin.scala
 
+import event.{ FocusNotifier, BlurNotifier, Event }
 import scala.collection.mutable
 import vaadin.scala.mixins.WindowMixin
 import vaadin.scala.internal.ListenersTrait
@@ -40,7 +41,8 @@ class Window(override val p: com.vaadin.ui.Window with WindowMixin = new com.vaa
     _closeShortcut = cs
     closeShortcut match {
       case None => p.removeCloseShortcut()
-      case Some(closeShortcut) => p.setCloseShortcut(closeShortcut.keyCode.value, closeShortcut.modifiers.map(_.value): _*)
+      case Some(closeShortcut) =>
+        p.setCloseShortcut(closeShortcut.keyCode.value, closeShortcut.modifiers.map(_.value): _*)
     }
   }
   def closeShortcut_=(cs: KeyShortcut): Unit = this.closeShortcut = Option(cs)

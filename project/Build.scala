@@ -10,7 +10,7 @@ object BuildSettings {
   val buildOrganization = "vaadin.scala"
   val buildName = "Scaladin"
   val buildVersion = "3.0.0-SNAPSHOT"
-  val buildScalaVersion = "2.10.0"
+  val buildScalaVersion = "2.10.1"
 
   val buildSettings = Defaults.defaultSettings ++ Seq(
     organization := buildOrganization,
@@ -33,6 +33,21 @@ object BuildSettings {
     ("Implementation-Version" -> buildVersion),
     ("Vaadin-Package-Version" -> "1"),
     ("Vaadin-License-Title" -> "Apache License 2.0")))
+}
+
+
+object Format {
+
+  lazy val settings = scalariformSettings ++ Seq(
+    ScalariformKeys.preferences := formattingPreferences
+  )
+ 
+  lazy val formattingPreferences = {
+    import scalariform.formatter.preferences._
+    FormattingPreferences().
+      setPreference(AlignParameters, true).
+      setPreference(DoubleIndentClassDeclaration, true)
+  }
 }
 
 object Dependencies {
@@ -59,7 +74,7 @@ object ScaladinBuild extends Build {
   import Dependencies._
   import BuildSettings._
 
-  lazy val addonSettings = buildSettings ++ jacoco.settings ++ scalariformSettings ++ Seq(
+  lazy val addonSettings = buildSettings ++ jacoco.settings ++ Format.settings ++ Seq(
     name := buildName,
     libraryDependencies := Seq(scala, scalaActors, vaadin, servletApi, portletApi, scalaTest, junitInterface, mockito),
     packageConfiguration in Compile in packageBin ~= { 
