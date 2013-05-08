@@ -37,6 +37,18 @@ package mixins {
   }
 }
 
+object Component {
+  trait Focusable extends Component {
+
+    def p: com.vaadin.ui.Component.Focusable with ComponentMixin
+
+    def focus() { p.focus() }
+
+    def tabIndex: Int = p.getTabIndex
+    def tabIndex_=(tabIndex: Int) { p.setTabIndex(tabIndex) }
+  }
+}
+
 trait Component extends Wrapper {
   def p: com.vaadin.ui.Component with ComponentMixin
 
@@ -51,6 +63,8 @@ trait Component extends Wrapper {
     def +=(elem: String) = { elem.split(" ").foreach(p.addStyleName(_)); this }
     def -=(elem: String) = { p.removeStyleName(elem); this }
   }
+
+  // TODO: setPrimaryStyleName
 
   def enabled: Boolean = p.isEnabled
   def enabled_=(enabled: Boolean) { p.setEnabled(enabled) }
@@ -68,7 +82,7 @@ trait Component extends Wrapper {
   def caption_=(caption: Option[String]) { p.setCaption(caption.orNull) }
   def caption_=(caption: String) { p.setCaption(caption) }
 
-  def icon: Option[Resource] = wrapperFor[Resource](p.getIcon)
+  def icon: Option[Resource] = wrapperFor(p.getIcon)
   def icon_=(icon: Option[Resource]) { p.setIcon(peerFor(icon)) }
   def icon_=(icon: Resource) { p.setIcon(icon.p) }
 
