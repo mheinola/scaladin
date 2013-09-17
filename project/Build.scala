@@ -18,13 +18,6 @@ object BuildSettings {
     scalaVersion := buildScalaVersion,
     scalacOptions ++= Seq("-deprecation", "-unchecked", "-encoding", "UTF-8"),
     resolvers := Seq("Vaadin Snapshots" at "https://oss.sonatype.org/content/repositories/vaadin-snapshots/"),
-    publishMavenStyle := true,
-    pomIncludeRepository := { _ => false },
-    publishTo := Some("Sonatype Nexus Repository Manager" at System.getProperty("nexusRepositoryUrl", "none")),
-    credentials += Credentials("Sonatype Nexus Repository Manager",
-                           System.getProperty("nexusUrl", "none"),
-                           System.getProperty("nexusUser", "none"),
-                           System.getProperty("nexusPassword", "none")),
     autoScalaLibrary := true,
     offline := false)
 
@@ -81,6 +74,13 @@ object ScaladinBuild extends Build {
     packageConfiguration in Compile in packageBin ~= { 
       (config: Package.Configuration) => new Package.Configuration(config.sources, config.jar, manifestAttributes) 
     },
+    publishMavenStyle := true,
+    pomIncludeRepository := { _ => false },
+    publishTo := Some("Sonatype Nexus Repository Manager" at System.getProperty("nexusRepositoryUrl", "none")),
+    credentials += Credentials("Sonatype Nexus Repository Manager",
+                           System.getProperty("nexusUrl", "none"),
+                           System.getProperty("nexusUser", "none"),
+                           System.getProperty("nexusPassword", "none")),
     unmanagedResourceDirectories in Compile <<= Seq(resourceDirectory in Compile, scalaSource in Compile).join)
 
   lazy val demoSettings = buildSettings ++ webSettings ++ Seq(
