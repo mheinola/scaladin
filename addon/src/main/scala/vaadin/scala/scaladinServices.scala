@@ -4,8 +4,11 @@ import event.Event
 import internal.{ SessionInitListener, ListenersTrait }
 import vaadin.scala.mixins.ScaladinServletServiceMixin
 import com.vaadin.server.VaadinRequest
+import vaadin.scala.server.{ ScaladinRequest, ScaladinSession }
+import vaadin.scala.server.mixins.VaadinSessionMixin
 
 package mixins {
+
   trait ScaladinServletServiceMixin extends ScaladinMixin { self: com.vaadin.server.VaadinServletService =>
     override def createVaadinSession(request: VaadinRequest) =
       new ScaladinSession(new com.vaadin.server.VaadinSession(this) with VaadinSessionMixin).p
@@ -39,4 +42,6 @@ trait ScaladinService extends Wrapper {
 class ScaladinServletService(override val p: com.vaadin.server.VaadinServletService with ScaladinServletServiceMixin)
     extends ScaladinService {
   p.wrapper = this
+
+  def init(): Unit = p.init()
 }

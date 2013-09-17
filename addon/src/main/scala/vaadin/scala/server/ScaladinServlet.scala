@@ -1,9 +1,10 @@
-package vaadin.scala
+package vaadin.scala.server
 
 import com.vaadin.server.{ VaadinServlet, SessionInitListener, SessionInitEvent }
 import javax.servlet.ServletConfig
-import internal.{ WrapperUtil, ScaladinUIProvider }
 import vaadin.scala.mixins.ScaladinServletServiceMixin
+import vaadin.scala.internal.{ WrapperUtil, ScaladinUIProvider }
+import vaadin.scala.ScaladinServletService
 
 class ScaladinServlet extends VaadinServlet {
 
@@ -18,8 +19,11 @@ class ScaladinServlet extends VaadinServlet {
     }
   }
 
-  override def createServletService(c: com.vaadin.server.DeploymentConfiguration) =
-    new ScaladinServletService(new com.vaadin.server.VaadinServletService(this, c) with ScaladinServletServiceMixin).p
+  override def createServletService(c: com.vaadin.server.DeploymentConfiguration) = {
+    val servletService = new ScaladinServletService(new com.vaadin.server.VaadinServletService(this, c) with ScaladinServletServiceMixin)
+    servletService.init()
+    servletService.p
+  }
 
   def service: ScaladinServletService = WrapperUtil.wrapperFor(getService).get
 }

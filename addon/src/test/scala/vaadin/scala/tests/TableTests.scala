@@ -9,6 +9,7 @@ import org.scalatest.mock.MockitoSugar
 import vaadin.scala.mixins.TableMixin
 import org.mockito.Mockito
 import org.mockito.ArgumentCaptor
+import vaadin.scala.server.ThemeResource
 
 @RunWith(classOf[JUnitRunner])
 class TableTests extends FunSuite with BeforeAndAfter with MockitoSugar {
@@ -58,7 +59,7 @@ class TableTests extends FunSuite with BeforeAndAfter with MockitoSugar {
     assert(table.visibleColumns === "col1" :: "col2" :: Nil)
 
     table.visibleColumns = "col1" :: Nil
-    Mockito.verify(spy).setVisibleColumns(Array("col1"))
+    Mockito.verify(spy).setVisibleColumns("col1")
 
     assert(table.visibleColumns === "col1" :: Nil)
 
@@ -72,7 +73,7 @@ class TableTests extends FunSuite with BeforeAndAfter with MockitoSugar {
     assert(table.columnHeaders === None :: None :: Nil)
 
     table.columnHeaders = Some("Header 1") :: None :: Nil
-    Mockito.verify(spy).setColumnHeaders(Array("Header 1", null))
+    Mockito.verify(spy).setColumnHeaders("Header 1", null)
     assert(table.columnHeaders === Some("Header 1") :: None :: Nil)
 
     table.columnHeaders = "Header 1" :: "Header 2" :: Nil
@@ -86,7 +87,7 @@ class TableTests extends FunSuite with BeforeAndAfter with MockitoSugar {
     assert(table.columnIcons === None :: None :: Nil)
 
     table.columnIcons = icons
-    Mockito.verify(spy).setColumnIcons(Array(icons(0).get.p, null))
+    Mockito.verify(spy).setColumnIcons(icons(0).get.p, null)
 
     assert(table.columnIcons === icons)
   }

@@ -4,7 +4,7 @@ object Item {
   def apply(properties: Tuple2[Any, Any]*): Item = fill(new PropertysetItem, properties: _*)
 
   def unapplySeq(item: Item): Option[Seq[Property[_]]] = {
-    if (item != null) Some(item.propertyIds.map(item.property).flatten.toSeq)
+    if (item != null) Some(item.propertyIds.map(item.getPropertyOption).flatten.toSeq)
     else None
   }
 
@@ -15,7 +15,7 @@ object Item {
 
   def filterable(properties: Tuple2[Any, Any]*): FilterableItem = fill(new PropertysetItem with FilterableItem, properties: _*)
 
-  def getProperties(item: Item): Iterable[Property[_]] = item.propertyIds.flatMap(item.property)
+  def getProperties(item: Item): Iterable[Property[_]] = item.propertyIds.flatMap(item.getPropertyOption)
 
   trait Viewer {
     def p: com.vaadin.data.Item.Viewer
@@ -23,7 +23,8 @@ object Item {
     //make sure that the Item wrapper instance is the same (type) all the time
     protected var itemWrapper: Option[Item] = None
     protected def internalSetItem(optionWrap: Option[Item]): Unit = optionWrap match {
-      case Some(wrapper) => itemWrapper = optionWrap; p.setItemDataSource(wrapper.p)
+      case Some(wrapper) =>
+        itemWrapper = optionWrap; p.setItemDataSource(wrapper.p)
       case None => itemWrapper = None; p.setItemDataSource(null)
     }
 
@@ -40,9 +41,14 @@ trait Item extends Wrapper {
 
   def p: com.vaadin.data.Item
 
-  def property(id: Any): Option[Property[_]] = optionalWrapProperty(p.getItemProperty(id))
+  def getProperty(id: Any): Property[_] = p.getItemProperty(id) match {
+    case null => null
+    case p => wrapProperty(p)
+  }
 
-  def propertyIds(): Iterable[Any] = p.getItemPropertyIds().asScala
+  def getPropertyOption(id: Any): Option[Property[_]] = optionalWrapProperty(p.getItemProperty(id))
+
+  def propertyIds: Iterable[Any] = p.getItemPropertyIds().asScala
 
   def addItemProperty(id: Any, property: Property[_]): Boolean = p.addItemProperty(id, property.p)
 

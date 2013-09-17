@@ -7,14 +7,22 @@ import org.scalatest.BeforeAndAfter
 import org.junit.runner.RunWith
 import org.scalatest.junit.JUnitRunner
 import java.io.{ ByteArrayOutputStream, ObjectOutputStream }
+import vaadin.scala.server.ScaladinRequest
+import org.mockito.{ Mockito, ArgumentCaptor }
+import com.vaadin.server.VaadinSession
+import org.scalatest.mock.MockitoSugar
+import vaadin.scala.PushConfiguration.{ Transport }
 
 @RunWith(classOf[JUnitRunner])
-class UITests extends FunSuite with BeforeAndAfter {
+class UITests extends FunSuite with MockitoSugar with BeforeAndAfter {
 
   var ui: UI = _
 
+  var spy: WrappedVaadinUI = _
+
   before {
-    ui = new UI {
+    spy = Mockito.spy(new WrappedVaadinUI)
+    ui = new UI(spy) {
       override def init(request: ScaladinRequest) {
       }
     }
@@ -139,5 +147,37 @@ class UITests extends FunSuite with BeforeAndAfter {
 
   ignore("serialization") {
     new ObjectOutputStream(new ByteArrayOutputStream()).writeObject(ui)
+  }
+
+  test("access should execute passed code block") {
+
+    Mockito.when(spy.getSession).thenReturn(mock[VaadinSession])
+
+    var i = 0
+    ui.access {
+      i = i + 1
+    }
+
+    val argument = ArgumentCaptor.forClass(classOf[Runnable])
+    Mockito.verify(spy).access(argument.capture())
+    argument.getValue.run()
+
+    assert(i == 1)
+  }
+
+  test("pollInterval") {
+    ui.pollInterval = 5
+    Mockito.verify(spy).setPollInterval(5)
+
+    assert(5 === ui.pollInterval)
+    Mockito.verify(spy).getPollInterval
+  }
+
+  test("pushConfiguration.pushMode") {
+    assert(PushMode.Disabled === ui.pushConfiguration.pushMode)
+
+    ui.pushConfiguration.pushMode = PushMode.Manual
+    assert(PushMode.Manual === ui.pushConfiguration.pushMode)
+
   }
 }

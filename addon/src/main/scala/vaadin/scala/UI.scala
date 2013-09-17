@@ -6,6 +6,7 @@ import vaadin.scala.internal.WrapperUtil
 import vaadin.scala.internal.ClickListener
 import vaadin.scala.internal.ListenersTrait
 import vaadin.scala.internal.WrappedVaadinUI
+import vaadin.scala.server.{ ScaladinSession, ScaladinRequest, Page }
 
 object UI {
   def current: UI = WrapperUtil.wrapperFor[UI](com.vaadin.ui.UI.getCurrent).orNull
@@ -107,4 +108,20 @@ abstract class UI(override val p: WrappedVaadinUI)
 
   def preserveOnRefresh: Boolean = _preserveOnRefresh
 
+  def session: ScaladinSession = wrapperFor(p.getSession) orNull
+
+  // TODO should return a Future
+  def access(runnable: => Unit): Unit =
+    p.access(new Runnable {
+      def run(): Unit = runnable
+    })
+
+  def pollInterval: Int = p.getPollInterval
+  def pollInterval_=(intervalInMillis: Int): Unit = p.setPollInterval(intervalInMillis)
+
+  def push(): Unit = p.push()
+
+  def pushConfiguration: PushConfiguration = new PushConfiguration {
+    val p = UI.this.p.getPushConfiguration
+  }
 }

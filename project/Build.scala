@@ -1,6 +1,6 @@
 import sbt._
 import Keys._
-import com.github.siasia.WebPlugin._
+import com.earldouglas.xsbtwebplugin.WebPlugin._
 import de.johoop.jacoco4sbt._
 import JacocoPlugin._
 import java.util.jar.{Attributes, Manifest}
@@ -9,8 +9,8 @@ import com.typesafe.sbt.SbtScalariform._
 object BuildSettings {
   val buildOrganization = "vaadin.scala"
   val buildName = "Scaladin"
-  val buildVersion = "3.0.0-SNAPSHOT"
-  val buildScalaVersion = "2.10.1"
+  val buildVersion = "3.0-SNAPSHOT"
+  val buildScalaVersion = "2.10.2"
 
   val buildSettings = Defaults.defaultSettings ++ Seq(
     organization := buildOrganization,
@@ -51,7 +51,7 @@ object Format {
 }
 
 object Dependencies {
-  val vaadinVersion = "7.0.5"
+  val vaadinVersion = "7.1.3"
   val jettyVersion = "7.3.0.v20110203"
   val scalaTestVersion = "2.0.M5-B1"
   val junitVersion = "4.9"
@@ -82,7 +82,8 @@ object ScaladinBuild extends Build {
       (config: Package.Configuration) => new Package.Configuration(config.sources, config.jar, manifestAttributes) 
     },
     unmanagedResourceDirectories in Compile <<= Seq(resourceDirectory in Compile, scalaSource in Compile).join,
-    dist)
+    dist,
+    publishTo := Some(Resolver.file("file", file(Option(System.getProperty("scaladin.repository.path")).getOrElse("../henrikerola.github.io/repository/snapshots")))))
 
   lazy val demoSettings = buildSettings ++ webSettings ++ Seq(
     name := buildName + "-demo",

@@ -7,22 +7,22 @@ trait FilterableContainer extends Container {
   /**
    * Filter based on item id
    */
-  def \(itemId: Any): Option[Item] = getItem(itemId)
+  def \(itemId: Any): Option[Item] = getItemOption(itemId)
 
   /**
    * Filter based on Item
    */
-  def filterItems(itemFilter: Item => Boolean): List[Item] = itemIds.map(getItem).flatten.filter(itemFilter).toList
+  def filterItems(itemFilter: Item => Boolean): List[Item] = itemIds.map(getItemOption).flatten.filter(itemFilter).toList
 
   /**
    * Filter based on property
    */
-  def filterProperties(propertyFilter: Property[_] => Boolean): List[Property[_]] = itemIds.map(getItem).flatten.flatMap(Item.getProperties).filter(propertyFilter).toList
+  def filterProperties(propertyFilter: Property[_] => Boolean): List[Property[_]] = itemIds.map(getItemOption).flatten.flatMap(Item.getProperties).filter(propertyFilter).toList
 
   /**
    * Filter based on property id
    */
-  def \\(propertyId: Any): List[Property[_]] = itemIds.map(getItem).flatten.map(_.property(propertyId)).flatten.toList
+  def \\(propertyId: Any): List[Property[_]] = itemIds.map(getItemOption).flatten.map(_.getPropertyOption(propertyId)).flatten.toList
 }
 
 trait FilterableItem extends Item {
@@ -34,7 +34,7 @@ trait FilterableItem extends Item {
   /**
    * Filter based on property id
    */
-  def \(propertyId: Any): Option[Property[_]] = property(propertyId)
+  def \(propertyId: Any): Option[Property[_]] = getPropertyOption(propertyId)
 
   def values: List[Any] = Item.getProperties(this).map(_.value).toList
 }

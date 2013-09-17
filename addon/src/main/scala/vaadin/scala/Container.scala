@@ -23,7 +23,12 @@ trait Container extends Wrapper {
 
   def p: com.vaadin.data.Container with ContainerMixin
 
-  def getItem(id: Any): Option[Item] = optionalWrapItem(p.getItem(id))
+  def getItem(id: Any): Item = p.getItem(id) match {
+    case null => null
+    case i => wrapItem(i)
+  }
+
+  def getItemOption(id: Any): Option[Item] = optionalWrapItem(p.getItem(id))
 
   def itemIds: Iterable[Any] = p.getItemIds.asScala
 
@@ -45,7 +50,12 @@ trait Container extends Wrapper {
 
   def size: Int = p.size()
 
-  def getProperty(itemId: Any, propertyId: Any): Option[Property[_]] =
+  def getProperty(itemId: Any, propertyId: Any): Property[_] = p.getContainerProperty(itemId, propertyId) match {
+    case null => null
+    case p => wrapProperty(p)
+  }
+
+  def getPropertyOption(itemId: Any, propertyId: Any): Option[Property[_]] =
     optionalWrapProperty(p.getContainerProperty(itemId, propertyId))
 
   def propertyIds: Iterable[Any] = p.getContainerPropertyIds().asScala
@@ -81,7 +91,7 @@ object Container {
         case Some(containerItem: Item) => {
           for (property <- item._2) {
             container.addContainerProperty(property._1, property._2.getClass, None)
-            containerItem.property(property._1) match {
+            containerItem.getPropertyOption(property._1) match {
               case Some(p: Property[_]) => p.value = (property._2)
               case _ =>
             }

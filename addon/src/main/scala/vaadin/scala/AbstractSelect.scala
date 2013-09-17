@@ -1,11 +1,9 @@
 package vaadin.scala
 
 import vaadin.scala.mixins.AbstractSelectMixin
-import vaadin.scala.mixins.AbstractFieldMixin
-import vaadin.scala.mixins.ContainerMixin
-import vaadin.scala.mixins.ContainerViewerMixin
 import vaadin.scala.internal.WrapperUtil
 import vaadin.scala.mixins.NewItemHandlerMixin
+import vaadin.scala.server.Resource
 
 package mixins {
   trait AbstractSelectMixin extends AbstractFieldMixin[AnyRef] with ContainerMixin with ContainerViewerMixin {
@@ -107,7 +105,7 @@ class DefaultNewItemHandler(select: AbstractSelect) extends NewItemHandler {
       // Sets the caption property, if used
       if (select.itemCaptionPropertyId.isDefined) {
         //try {
-        select.getProperty(newItemCaption, select.itemCaptionPropertyId.get).get.value = newItemCaption
+        select.getPropertyOption(newItemCaption, select.itemCaptionPropertyId.get).get.value = newItemCaption
         //} catch {
         // TODO
         //case ignored: com.vaadin.data.Property.ConversionException =>
