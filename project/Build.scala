@@ -81,10 +81,7 @@ object ScaladinBuild extends Build {
     packageConfiguration in Compile in packageBin ~= { 
       (config: Package.Configuration) => new Package.Configuration(config.sources, config.jar, manifestAttributes) 
     },
-    unmanagedResourceDirectories in Compile <<= Seq(resourceDirectory in Compile, scalaSource in Compile).join,
-    dist//,
-    //publishTo := Some(Resolver.file("file", file(Option(System.getProperty("scaladin.repository.path")).getOrElse("../henrikerola.github.io/repository/snapshots"))))
-    )
+    unmanagedResourceDirectories in Compile <<= Seq(resourceDirectory in Compile, scalaSource in Compile).join)
 
   lazy val demoSettings = buildSettings ++ webSettings ++ Seq(
     name := buildName + "-demo",
