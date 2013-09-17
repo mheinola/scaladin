@@ -3,8 +3,7 @@
 addSbtPlugin("com.earldouglas" % "xsbt-web-plugin" % "0.4.1")
 
 // sbtidea
-
-addSbtPlugin("com.github.mpeltonen" % "sbt-idea" % "1.4.0")
+addSbtPlugin("com.github.mpeltonen" % "sbt-idea" % "1.5.1")
 
 // sbteclipse
 resolvers += Classpaths.typesafeResolver
