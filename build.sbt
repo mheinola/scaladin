@@ -14,6 +14,10 @@ scalacOptions in ThisBuild ++= Seq("-deprecation", "-unchecked", "-encoding", "U
 
 // sbt -Dscaladin.repository.path=../henrikerola.github.io/repository/releases publish
 // publishTo in ThisBuild := Some(Resolver.file("GitHub", file(Option(System.getProperty("scaladin.repository.path")).getOrElse("../henrikerola.github.io/repository/snapshots"))))
+publishMavenStyle := true
+
+pomIncludeRepository := { _ => false }
+
 publishTo := Some("Sonatype Nexus Repository Manager" at System.getProperty("nexusRepositoryUrl", "none"))
 
 credentials += Credentials("Sonatype Nexus Repository Manager", System.getProperty("nexusUrl", "none"), System.getProperty("nexusUser", "none"), System.getProperty("nexusPassword", "none"))
