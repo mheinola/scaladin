@@ -1,13 +1,13 @@
 package vaadin.scala.server
 
-import vaadin.scala.event.{ ClickEvent, Event }
-import vaadin.scala.internal.WrapperUtil
+import vaadin.scala.event.Event
 import vaadin.scala.internal.ListenersTrait
 import vaadin.scala.internal.UriFragmentChangedListener
 import vaadin.scala.internal.BrowserWindowResizeListener
 import com.vaadin.shared.ui.BorderStyle
 import java.net.URI
-import vaadin.scala.{ ListenersSet, Wrapper }
+import vaadin.scala.{ JavaScript, ListenersSet, Wrapper }
+import vaadin.scala.server.Page.Styles
 
 object Page {
 
@@ -25,6 +25,20 @@ object Page {
 
   case class BrowserWindowResizeEvent(page: Page, width: Int, height: Int) extends Event
   case class UriFragmentChangedEvent(page: Page, fragment: Option[String]) extends Event
+
+  trait Styles extends Wrapper {
+
+    val p: com.vaadin.server.Page.Styles
+
+    def add(css: String): Unit = p.add(css)
+
+    def add(resource: Resource) = p.add(resource.pResource)
+
+    def +=(css: String): Unit = add(css)
+
+    def +=(resource: Resource): Unit = add(resource)
+
+  }
 }
 
 trait Page extends Wrapper { page =>
@@ -43,21 +57,25 @@ trait Page extends Wrapper { page =>
   }
 
   def browserWindowSize: (Int, Int) = (browserWindowWidth, browserWindowHeight)
-  def browserWindowSize_=(size: (Int, Int)) { p.updateBrowserWindowSize(size._1, size._2) }
+  def browserWindowSize_=(size: (Int, Int)) { p.updateBrowserWindowSize(size._1, size._2, true) }
 
   def browserWindowHeight: Int = p.getBrowserWindowHeight
   def browserWindowHeight_=(browserWindowHeight: Int) {
-    p.updateBrowserWindowSize(browserWindowWidth, browserWindowHeight)
+    p.updateBrowserWindowSize(browserWindowWidth, browserWindowHeight, true)
   }
 
   def browserWindowWidth: Int = p.getBrowserWindowWidth
   def browserWindowWidth_=(browserWindowWidth: Int) {
-    p.updateBrowserWindowSize(browserWindowWidth, browserWindowHeight)
+    p.updateBrowserWindowSize(browserWindowWidth, browserWindowHeight, true)
   }
 
-  //  def javaScript: JavaScript = new JavaScript {
-  //    val p = page.p.getJavaScript
-  //  }
+  def javaScript: JavaScript = new JavaScript {
+    val p = page.p.getJavaScript
+  }
+
+  def styles: Styles = new Styles {
+    val p = page.p.getStyles
+  }
 
   def location: URI = p.getLocation
   def location_=(url: URI) { p.setLocation(url) }
@@ -70,6 +88,8 @@ trait Page extends Wrapper { page =>
   }
 
   def setTitle(title: String) { p.setTitle(title) }
+
+  def reload(): Unit = p.reload()
 
   lazy val uriFragmentChangedListeners: ListenersSet[Page.UriFragmentChangedEvent => Unit] =
     new ListenersTrait[Page.UriFragmentChangedEvent, UriFragmentChangedListener] {

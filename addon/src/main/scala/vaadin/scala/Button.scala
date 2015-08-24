@@ -1,8 +1,7 @@
 package vaadin.scala
 
-import event.{ FocusNotifier, BlurNotifier, Event }
+import event.{ FocusNotifier, BlurNotifier, ComponentEvent }
 import vaadin.scala.mixins.ButtonMixin
-import vaadin.scala.internal.WrapperUtil
 import vaadin.scala.internal.ButtonClickListener
 import vaadin.scala.internal.ListenersTrait
 
@@ -21,7 +20,7 @@ object Button {
     altKey: Boolean,
     ctrlKey: Boolean,
     metaKey: Boolean,
-    shiftKey: Boolean) extends Event
+    shiftKey: Boolean) extends ComponentEvent(button)
 
   def apply(caption: String): Button = {
     val button = new Button

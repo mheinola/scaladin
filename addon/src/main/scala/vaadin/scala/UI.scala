@@ -3,8 +3,6 @@ package vaadin.scala
 import vaadin.scala.event.{ ClickNotifier, ClickEvent }
 import scala.collection.mutable
 import vaadin.scala.internal.WrapperUtil
-import vaadin.scala.internal.ClickListener
-import vaadin.scala.internal.ListenersTrait
 import vaadin.scala.internal.WrappedVaadinUI
 import vaadin.scala.server.{ ScaladinSession, ScaladinRequest, Page }
 
@@ -27,18 +25,21 @@ abstract class UI(override val p: WrappedVaadinUI)
   private[this] var _theme: Option[String] = None
   private[this] var _widgetset: Option[String] = None
   private[this] var _preserveOnRefresh: Boolean = false
+  private[this] var _pushMode: PushMode.Value = PushMode.Disabled
 
   def this(
     title: String = null,
     theme: String = null,
     widgetset: String = null,
     preserveOnRefresh: Boolean = false,
+    pushMode: PushMode.Value = PushMode.Disabled,
     p: WrappedVaadinUI = new WrappedVaadinUI) {
     this(p)
     this._title = Option(title)
     this._theme = Option(theme)
     this._widgetset = Option(widgetset)
     this._preserveOnRefresh = preserveOnRefresh
+    this._pushMode = pushMode
   }
 
   def delayedInit(body: => Unit) {
@@ -56,6 +57,12 @@ abstract class UI(override val p: WrappedVaadinUI)
   def init(request: ScaladinRequest) {
     // This can be overridden in subclass if access to ScaladinRequest is needed in initialization code  
   }
+
+  /**
+   * When preserveOnRefresh is true for the UI, this method can be
+   * overridden to refresh the UI on a browser refresh.
+   */
+  def refresh(request: ScaladinRequest): Unit = {}
 
   def uiId: Int = p.getUIId
 
@@ -101,6 +108,7 @@ abstract class UI(override val p: WrappedVaadinUI)
   def isClosing: Boolean = p.isClosing
 
   def theme: String = Option(p.getTheme).getOrElse(_theme.orNull)
+  def theme_=(theme: String): Unit = p.setTheme(theme)
 
   def title: Option[String] = _title
 
@@ -109,6 +117,8 @@ abstract class UI(override val p: WrappedVaadinUI)
   def preserveOnRefresh: Boolean = _preserveOnRefresh
 
   def session: ScaladinSession = wrapperFor(p.getSession) orNull
+
+  def pushMode: PushMode.Value = _pushMode
 
   // TODO should return a Future
   def access(runnable: => Unit): Unit =

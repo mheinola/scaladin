@@ -1,6 +1,6 @@
 package vaadin.scala
 
-import event.Event
+import event.ComponentEvent
 import vaadin.scala.mixins.FieldGroupMixin
 import vaadin.scala.mixins.FieldMixin
 import scala.util.Try
@@ -19,8 +19,8 @@ package mixins {
 }
 
 object FieldGroup {
-  case class PreCommitEvent(fieldBinder: FieldGroup) extends Event
-  case class PostCommitEvent(fieldBinder: FieldGroup) extends Event
+  case class PreCommitEvent(fieldBinder: FieldGroup)
+  case class PostCommitEvent(fieldBinder: FieldGroup)
 
   case class CommitSuccess()
   case class CommitFailed(error: String)
@@ -29,7 +29,9 @@ object FieldGroup {
   case class propertyId(value: String) extends StaticAnnotation
 
   def apply(item: Item): FieldGroup = {
-    new FieldGroup(new VaadinFieldGroup(item.p) with FieldGroupMixin)
+    val fieldGroup = new FieldGroup(new VaadinFieldGroup() with FieldGroupMixin)
+    fieldGroup.item_=(item)
+    fieldGroup
   }
 }
 
@@ -39,6 +41,8 @@ class FieldGroup(override val p: VaadinFieldGroup with FieldGroupMixin = new Vaa
   import scala.collection.JavaConverters._
   import scala.util.control.Exception._
   import scala.collection.mutable
+
+  p.wrapper = this
 
   fieldFactory = DefaultFieldGroupFieldFactory
 

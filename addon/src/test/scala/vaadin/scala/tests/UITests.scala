@@ -9,7 +9,7 @@ import org.scalatest.junit.JUnitRunner
 import java.io.{ ByteArrayOutputStream, ObjectOutputStream }
 import vaadin.scala.server.ScaladinRequest
 import org.mockito.{ Mockito, ArgumentCaptor }
-import com.vaadin.server.VaadinSession
+import com.vaadin.server.{ VaadinRequest, VaadinSession }
 import org.scalatest.mock.MockitoSugar
 import vaadin.scala.PushConfiguration.{ Transport }
 
@@ -47,15 +47,17 @@ class UITests extends FunSuite with MockitoSugar with BeforeAndAfter {
     assert(ui.widgetset === None)
     assert(ui.preserveOnRefresh === false)
     assert(ui.p != null)
+    assert(ui.pushConfiguration.pushMode == PushMode.Disabled)
 
     val wrappedVaadinUI = new WrappedVaadinUI
-    ui = new UI("mytitle", "mytheme", "mywidgetset", true, wrappedVaadinUI) {}
+    ui = new UI(title = "mytitle", theme = "mytheme", widgetset = "mywidgetset", preserveOnRefresh = true, pushMode = PushMode.Automatic, p = wrappedVaadinUI) {}
 
     assert(ui.title === Some("mytitle"))
     assert(ui.theme === "mytheme")
     assert(ui.widgetset === Some("mywidgetset"))
     assert(ui.preserveOnRefresh === true)
     assert(ui.p === wrappedVaadinUI)
+    assert(ui.pushMode === PushMode.Automatic)
   }
 
   test("initialization without init(request: ScaladinRequest)") {
@@ -174,10 +176,39 @@ class UITests extends FunSuite with MockitoSugar with BeforeAndAfter {
   }
 
   test("pushConfiguration.pushMode") {
-    assert(PushMode.Disabled === ui.pushConfiguration.pushMode)
+    val spyWithSession = Mockito.spy(new WrappedVaadinUI)
+    val pushConfiguration = mock[com.vaadin.ui.PushConfiguration]
 
-    ui.pushConfiguration.pushMode = PushMode.Manual
-    assert(PushMode.Manual === ui.pushConfiguration.pushMode)
+    Mockito.when(spyWithSession.getSession).thenReturn(mock[VaadinSession])
+    Mockito.when(spyWithSession.getPushConfiguration).thenReturn(pushConfiguration)
 
+    val uiWithSession = new UI(spyWithSession) {
+      override def init(request: ScaladinRequest) {
+      }
+    }
+
+    uiWithSession.pushConfiguration.pushMode = PushMode.Manual
+    Mockito.verify(pushConfiguration).setPushMode(com.vaadin.shared.communication.PushMode.MANUAL)
+
+  }
+
+  test("refresh") {
+    val vaadinUI = new WrappedVaadinUI
+
+    var cnt = 0;
+    val ui = new UI(vaadinUI) {
+      override def refresh(request: ScaladinRequest): Unit = {
+        cnt = cnt + 1
+      }
+    }
+
+    vaadinUI.refresh(mock[VaadinRequest])
+
+    assert(1 == cnt)
+  }
+
+  test("theme setter") {
+    ui.theme = "valo"
+    Mockito.verify(spy).setTheme("valo")
   }
 }

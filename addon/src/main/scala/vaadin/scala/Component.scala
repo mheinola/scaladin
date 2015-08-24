@@ -1,15 +1,16 @@
 package vaadin.scala
 
-import scala.collection.mutable
-import vaadin.scala.mixins.ComponentMixin
 import java.util.Locale
+import scala.collection.mutable
 import vaadin.scala.server.Resource
 
 package mixins {
-  trait ComponentMixin extends ScaladinMixin { self: com.vaadin.ui.Component =>
+  trait ComponentMixin extends ClientConnectorMixin { self: com.vaadin.ui.Component =>
     def wrapperComponent: Component = wrapper.asInstanceOf[Component]
   }
 }
+
+import vaadin.scala.mixins.ComponentMixin
 
 object Component {
   trait Focusable extends Component {
@@ -23,7 +24,7 @@ object Component {
   }
 }
 
-trait Component extends Wrapper {
+trait Component extends ClientConnector {
   def p: com.vaadin.ui.Component with ComponentMixin
 
   // TODO: add methods styleName, addStyleName, removeStyleName?
@@ -38,16 +39,18 @@ trait Component extends Wrapper {
     def -=(elem: String) = { p.removeStyleName(elem); this }
   }
 
-  // TODO: setPrimaryStyleName
+  def primaryStyleName: String = p.getPrimaryStyleName
+  def primaryStyleName_=(primaryStyleName: String): Unit = p.setPrimaryStyleName(primaryStyleName)
+
+  override def parent: Option[HasComponents] = super.parent.map(_.asInstanceOf[HasComponents])
+  def parent_=(parent: HasComponents) = p.setParent(parent.p)
+  def parent_=(parent: Option[HasComponents]) = p.setParent(parent.map(_.p).orNull)
 
   def enabled: Boolean = p.isEnabled
   def enabled_=(enabled: Boolean) { p.setEnabled(enabled) }
 
   def visible: Boolean = p.isVisible
   def visible_=(visible: Boolean) { p.setVisible(visible) }
-
-  // TODO parent setter?
-  def parent: Option[Component] = wrapperFor(p.getParent())
 
   def readOnly: Boolean = p.isReadOnly
   def readOnly_=(readOnly: Boolean) { p.setReadOnly(readOnly) }
@@ -58,7 +61,7 @@ trait Component extends Wrapper {
 
   def icon: Option[Resource] = wrapperFor(p.getIcon)
   def icon_=(icon: Option[Resource]) { p.setIcon(peerFor(icon)) }
-  def icon_=(icon: Resource) { p.setIcon(icon.p) }
+  def icon_=(icon: Resource) { p.setIcon(icon.pResource) }
 
   def ui: UI = wrapperFor(p.getUI).orNull
 

@@ -1,7 +1,7 @@
 package vaadin.scala
 
 import com.vaadin.ui.{ TabSheet => VaadinTabSheet }
-import event.{ FocusNotifier, BlurNotifier, Event }
+import event.{ FocusNotifier, BlurNotifier, ComponentEvent }
 import vaadin.scala.mixins.TabSheetMixin
 import internal.{ TabCloseHandler, SelectedTabChangeListener, ListenersTrait }
 import collection.mutable
@@ -30,7 +30,7 @@ object TabSheet {
 
     def icon: Option[Resource] = wrapperFor(p.getIcon)
     def icon_=(icon: Option[Resource]) { p.setIcon(peerFor(icon)) }
-    def icon_=(icon: Resource) { p.setIcon(icon.p) }
+    def icon_=(icon: Resource) { p.setIcon(icon.pResource) }
 
     def description: Option[String] = Option(p.getDescription)
     def description_=(description: Option[String]) { p.setDescription(description.orNull) }
@@ -45,8 +45,8 @@ object TabSheet {
     def styleName_=(styleName: String) { p.setStyleName(styleName) }
   }
 
-  case class TabCloseEvent(tabSheet: TabSheet, component: Component, tab: TabSheet.Tab) extends Event
-  case class SelectedTabChangeEvent(tabSheet: TabSheet) extends Event
+  case class TabCloseEvent(tabSheet: TabSheet, component: Component, tab: TabSheet.Tab) extends ComponentEvent(tabSheet)
+  case class SelectedTabChangeEvent(tabSheet: TabSheet) extends ComponentEvent(tabSheet)
 
 }
 
@@ -79,9 +79,9 @@ class TabSheet(override val p: VaadinTabSheet with TabSheetMixin = new VaadinTab
   def addTab(component: Component): TabSheet.Tab = register(p.addTab(component.p))
   def addTab(component: Component, caption: String): TabSheet.Tab = register(p.addTab(component.p, caption))
   def addTab(component: Component, caption: String, icon: Resource): TabSheet.Tab =
-    register(p.addTab(component.p, caption, icon.p))
+    register(p.addTab(component.p, caption, icon.pResource))
   def addTab(component: Component, caption: String, icon: Resource, position: Int): TabSheet.Tab =
-    register(p.addTab(component.p, caption, icon.p, position))
+    register(p.addTab(component.p, caption, icon.pResource, position))
   def addTab(component: Component, position: Int): TabSheet.Tab = register(p.addTab(component.p, position))
 
   override def add[C <: Component](component: C): C = addTab(component).component.asInstanceOf[C]
@@ -118,4 +118,8 @@ class TabSheet(override val p: VaadinTabSheet with TabSheetMixin = new VaadinTab
         p.addSelectedTabChangeListener(new SelectedTabChangeListener(elem))
       override def removeListener(elem: SelectedTabChangeListener) = p.removeSelectedTabChangeListener(elem)
     }
+
+  def tabCaptionsAsHtml: Boolean = p.isTabCaptionsAsHtml
+  def tabCaptionsAsHtml_=(tabCaptionsAsHtml: Boolean): Unit = p.setTabCaptionsAsHtml(tabCaptionsAsHtml)
+
 }
