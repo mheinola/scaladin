@@ -12,9 +12,15 @@ crossScalaVersions in ThisBuild := Seq("2.10.4", "2.11.7")
 
 scalacOptions in ThisBuild ++= Seq("-deprecation", "-unchecked", "-encoding", "UTF-8")
 
-// sbt -Dscaladin.repository.path=../henrikerola.github.io/repository/releases publish
-// publishTo in ThisBuild := Some(Resolver.file("GitHub", file(Option(System.getProperty("scaladin.repository.path")).getOrElse("../henrikerola.github.io/repository/snapshots"))))
-publishMavenStyle := true
+resolvers in ThisBuild += "Vaadin snapshots" at "https://oss.sonatype.org/content/repositories/vaadin-snapshots"
+
+lazy val root = project.in(file(".")).aggregate(addon, demo)
+
+publishMavenStyle := false
+
+publishArtifact in Test := false
+
+publishArtifact in Compile := false
 
 pomIncludeRepository := { _ => false }
 
@@ -22,16 +28,18 @@ publishTo := Some("Sonatype Nexus Repository Manager" at System.getProperty("nex
 
 credentials += Credentials("Sonatype Nexus Repository Manager", System.getProperty("nexusUrl", "none"), System.getProperty("nexusUser", "none"), System.getProperty("nexusPassword", "none"))
 
-resolvers in ThisBuild += "Vaadin snapshots" at "https://oss.sonatype.org/content/repositories/vaadin-snapshots"
-
-lazy val root = project.in(file(".")).aggregate(addon, demo)
-
 lazy val addon = project
   .settings(vaadinAddOnSettings :_*)
   .settings(scalariformSettings :_*)
   .settings(
     name := "Scaladin",
-    libraryDependencies := Dependencies.addonDeps(scalaVersion.value)
+    libraryDependencies := Dependencies.addonDeps(scalaVersion.value),
+    publishMavenStyle := true,
+    publishArtifact in Test := false,
+    publishArtifact in Compile := true,
+    pomIncludeRepository := { _ => false },
+    publishTo := Some("Sonatype Nexus Repository Manager" at System.getProperty("nexusRepositoryUrl", "none")),
+    credentials += Credentials("Sonatype Nexus Repository Manager", System.getProperty("nexusUrl", "none"), System.getProperty("nexusUser", "none"), System.getProperty("nexusPassword", "none"))
   )
 
 lazy val demo = project
@@ -40,5 +48,11 @@ lazy val demo = project
   .settings(scalariformSettings :_*)
   .settings(
     name := "scaladin-demo",
-    libraryDependencies ++= Dependencies.demoDeps
+    libraryDependencies ++= Dependencies.demoDeps,
+    publishMavenStyle := false,
+    publishArtifact in Test := false,
+    publishArtifact in Compile := false,
+    pomIncludeRepository := { _ => false },
+    publishTo := Some("Sonatype Nexus Repository Manager" at System.getProperty("nexusRepositoryUrl", "none")),
+    credentials += Credentials("Sonatype Nexus Repository Manager", System.getProperty("nexusUrl", "none"), System.getProperty("nexusUser", "none"), System.getProperty("nexusPassword", "none"))
   ).dependsOn(addon)
