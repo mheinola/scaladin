@@ -8,7 +8,7 @@ import vaadin.scala.Grid._
 import vaadin.scala.renderers.mixins.RendererMixin
 import collection.JavaConverters._
 import scala.reflect.ClassTag
-import vaadin.scala.event.{ ItemClickNotifier, SortNotifier, SelectionNotifier }
+import vaadin.scala.event.{ ComponentEvent, ItemClickNotifier, SortNotifier, SelectionNotifier }
 import vaadin.scala.renderers.{ TextRenderer, Renderer }
 import vaadin.scala.converter.Converter
 
@@ -110,6 +110,10 @@ object Grid {
     def headerCaption: String = p.getHeaderCaption
     def headerCaption_=(headerCaption: String): Unit = p.setHeaderCaption(headerCaption)
 
+    def hidingToggleCaption: Option[String] = Option(p.getHidingToggleCaption)
+    def hidingToggleCaption_=(caption: String): Unit = p.setHidingToggleCaption(caption)
+    def hidingToggleCaption_=(caption: Option[String]): Unit = p.setHidingToggleCaption(caption.orNull)
+
     def width: Double = p.getWidth
     def width_=(pixelWidth: Double): Unit = p.setWidth(pixelWidth)
     def width_=(pixelWidth: Option[Double]): Unit = {
@@ -154,6 +158,19 @@ object Grid {
     def maximumWidth: Double = p.getMaximumWidth
     def maximumWidth_=(maximumWidth: Double): Unit = p.setMaximumWidth(maximumWidth)
 
+    def editable: Boolean = p.isEditable
+    def editable_=(editable: Boolean): Unit = p.setEditable(editable)
+
+    def editorField: Option[Field[_]] = wrapperFor(p.getEditorField)
+    def editorField_=(editor: Option[Field[_]]): Unit = p.setEditorField(peerFor(editor))
+    def editorField_=(editor: Field[_]): Unit = p.setEditorField(editor.p)
+
+    def hidden: Boolean = p.isHidden
+    def hidden_=(hidden: Boolean): Unit = p.setHidden(hidden)
+
+    def hidable: Boolean = p.isHidable
+    def hidable_=(hidable: Boolean): Unit = p.setHidable(hidable)
+
   }
 
   case class RowReference(grid: Grid, itemId: Any) {
@@ -165,6 +182,9 @@ object Grid {
     def property: Property[_] = item.getProperty(propertyId)
     def value: Option[Any] = property.value
   }
+
+  case class ColumnVisibilityChangeEvent(grid: Grid, column: Column, userOriginated: Boolean, hidden: Boolean)
+    extends ComponentEvent(grid)
 
   sealed trait SelectionModel extends Wrapper {
 
@@ -236,6 +256,7 @@ class Grid(override val p: VaadinGrid with GridMixin)
   def getColumn(propertyId: Any): Option[Column] = Option(p.getColumn(propertyId)).map(wrapColumn(_))
 
   def columns: Seq[Column] = p.getColumns.asScala.map(wrapColumn(_))
+  def columns_=(propertyIds: Seq[Any]): Unit = p.setColumns(propertyIds.asInstanceOf[Seq[Object]]: _*)
 
   def addColumn[TYPE](propertyId: Any)(implicit tag: ClassTag[TYPE]): Column =
     if (tag.runtimeClass == classOf[Nothing])
@@ -244,6 +265,9 @@ class Grid(override val p: VaadinGrid with GridMixin)
       wrapColumn(p.addColumn(propertyId, tag.runtimeClass))
 
   def removeAllColumns(): Unit = p.removeAllColumns()
+
+  def columnReorderingAllowed: Boolean = p.isColumnReorderingAllowed
+  def columnReorderingAllowed_=(reorderingAllowed: Boolean): Unit = p.setColumnReorderingAllowed(reorderingAllowed)
 
   def removeColumn(propertyId: Any): Unit = p.removeColumn(propertyId)
 
@@ -405,6 +429,13 @@ class Grid(override val p: VaadinGrid with GridMixin)
   def editorCancelCaption_=(cancelCaption: String): Unit = p.setEditorCancelCaption(cancelCaption)
 
   def recalculateColumnWidths(): Unit = p.recalculateColumnWidths()
+
+  lazy val columnVisibilityChangeListeners: ListenersSet[ColumnVisibilityChangeEvent => Unit] =
+    new ListenersTrait[ColumnVisibilityChangeEvent, GridColumnVisibilityChangeListener] {
+      override def listeners = p.getListeners(classOf[com.vaadin.ui.Grid.ColumnVisibilityChangeEvent])
+      override def addListener(elem: ColumnVisibilityChangeEvent => Unit) = p.addColumnVisibilityChangeListener(new GridColumnVisibilityChangeListener(elem))
+      override def removeListener(elem: GridColumnVisibilityChangeListener) = p.removeColumnVisibilityChangeListener(elem)
+    }
 
   def detailsGenerator: Option[Grid.RowReference => Option[Component]] = {
     p.getDetailsGenerator match {

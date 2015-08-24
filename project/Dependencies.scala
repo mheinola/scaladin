@@ -2,8 +2,7 @@ import sbt._
 
 object Dependencies {
 
-  private val vaadinVersion = "7.5.1"
-  private val jettyVersion = "7.3.0.v20110203"
+  private val vaadinVersion = "7.5.2"
   private val scalaTestVersion = "2.2.0"
   private val mockitoVersion = "1.9.5"
 
@@ -13,7 +12,6 @@ object Dependencies {
   private val vaadinThemes = "com.vaadin" % "vaadin-themes" % vaadinVersion
   private val servletApi = "javax.servlet" % "servlet-api" % "2.4"
   private val portletApi = "javax.portlet" % "portlet-api" % "2.0"
-  private val jetty = "org.eclipse.jetty" % "jetty-webapp" % jettyVersion
   private val scalaTest = "org.scalatest" %% "scalatest" % scalaTestVersion
   private val junitInterface = "com.novocode" % "junit-interface" % "0.7"
   private val mockito = "org.mockito" % "mockito-all" % mockitoVersion
@@ -29,7 +27,6 @@ object Dependencies {
   )
 
   val demoDeps = Seq(
-    jetty % "container",
     vaadinClientCompiled,
     vaadinThemes
   )

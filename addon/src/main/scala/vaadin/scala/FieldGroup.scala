@@ -1,6 +1,5 @@
 package vaadin.scala
 
-import event.ComponentEvent
 import vaadin.scala.mixins.FieldGroupMixin
 import vaadin.scala.mixins.FieldMixin
 import scala.util.Try
@@ -23,7 +22,7 @@ object FieldGroup {
   case class PostCommitEvent(fieldBinder: FieldGroup)
 
   case class CommitSuccess()
-  case class CommitFailed(error: String)
+  case class CommitFailed(exception: VaadinCommitException)
   type CommitResult = Either[CommitFailed, CommitSuccess]
 
   case class propertyId(value: String) extends StaticAnnotation
@@ -102,7 +101,7 @@ class FieldGroup(override val p: VaadinFieldGroup with FieldGroupMixin = new Vaa
   def unboundPropertyIds: Iterable[Any] = p.getUnboundPropertyIds.asScala
 
   def commit(): FieldGroup.CommitResult = catching(classOf[VaadinCommitException]) either (p.commit) fold (
-    exception => Left(FieldGroup.CommitFailed(exception.getMessage)),
+    exception => Left(FieldGroup.CommitFailed(exception.asInstanceOf[VaadinCommitException])),
     nothing => Right(FieldGroup.CommitSuccess()))
 
   def discard() { p.discard() }

@@ -33,6 +33,7 @@ class GridTests extends ScaladinTestSuite {
     vaadinGrid = new VaadinGrid
     spy = Mockito.spy(vaadinGrid)
     grid = new Grid(spy)
+    vaadinGrid.wrapper = grid
   }
 
   test("container") {
@@ -98,8 +99,8 @@ class GridTests extends ScaladinTestSuite {
   test("columns") {
     assert(grid.columns.isEmpty)
 
-    grid.addColumn("col1")
-    grid.addColumn("col2")
+    grid.columns = Seq("propertyId1", "propertyId2")
+    Mockito.verify(spy).setColumnOrder("propertyId1", "propertyId2")
 
     assert(2 == grid.columns.size)
   }
@@ -117,6 +118,15 @@ class GridTests extends ScaladinTestSuite {
   test("removeAllColumns()") {
     grid.removeAllColumns()
     Mockito.verify(spy).removeAllColumns()
+  }
+
+  test("columnReorderingAllowed") {
+    assert(!grid.columnReorderingAllowed)
+
+    grid.columnReorderingAllowed = true
+    Mockito.verify(spy).setColumnReorderingAllowed(true)
+
+    assert(grid.columnReorderingAllowed)
   }
 
   test("removeColumn") {
@@ -138,6 +148,20 @@ class GridTests extends ScaladinTestSuite {
 
     column.headerCaption = "Header for Column"
     assert("Header for Column" == column.headerCaption)
+  }
+
+  test("Column.hidingToggleCaption") {
+    val column = grid.addColumn[String]("myColumn")
+    assert(column.hidingToggleCaption.isEmpty)
+
+    column.hidingToggleCaption = "My Caption"
+    assert(Some("My Caption") == column.hidingToggleCaption)
+
+    column.hidingToggleCaption = None
+    assert(column.hidingToggleCaption.isEmpty)
+
+    column.hidingToggleCaption = Some("My Caption 2")
+    assert(Some("My Caption 2") == column.hidingToggleCaption)
   }
 
   test("Column.width") {
@@ -224,7 +248,7 @@ class GridTests extends ScaladinTestSuite {
     assert(1 == column.expandRatio)
   }
 
-  test("minimumWidth") {
+  test("Column.minimumWidth") {
     val column = grid.addColumn[String]("myColumn")
 
     assert(10 == column.minimumWidth)
@@ -233,13 +257,42 @@ class GridTests extends ScaladinTestSuite {
     assert(5 == column.minimumWidth)
   }
 
-  test("maximumWidth") {
+  test("Column.maximumWidth") {
     val column = grid.addColumn[String]("myColumn")
 
     assert(-1 == column.maximumWidth)
 
     column.maximumWidth = 20
     assert(20 == column.maximumWidth)
+  }
+
+  test("Column.editable") {
+    val column = grid.addColumn[String]("myColumn")
+
+    assert(column.editable)
+
+    column.editable = false
+    assert(!column.editable)
+  }
+
+  // TODO: test for Column.editorField
+
+  test("Column.hidden") {
+    val column = grid.addColumn[String]("myColumn")
+
+    assert(!column.hidden)
+
+    column.hidden = true
+    assert(column.hidden)
+  }
+
+  test("Column.hidable") {
+    val column = grid.addColumn[String]("myColumn")
+
+    assert(!column.hidable)
+
+    column.hidable = true
+    assert(column.hidable)
   }
 
   // TODO tests for Grid.Column class
@@ -366,7 +419,7 @@ class GridTests extends ScaladinTestSuite {
     Mockito.verify(spy).deselect(itemId)
   }
 
-  ignore("selectionListeners") {
+  test("selectionListeners") {
     grid.addColumn[String]("propertyId")
     val itemId = grid.addRow("value")
     var cnt = 0
@@ -687,6 +740,34 @@ class GridTests extends ScaladinTestSuite {
     grid.recalculateColumnWidths()
 
     Mockito.verify(spy).recalculateColumnWidths()
+  }
+
+  test("columnVisibilityChangeListeners") {
+    val col = grid.addColumn[String]("propertyId")
+    var cnt = 0
+
+    grid.columnVisibilityChangeListeners += { e =>
+      cnt = cnt + 1
+      assert(grid == e.grid)
+      assert(col.p == e.column.p)
+      assert(e.hidden)
+      assert(!e.userOriginated)
+    }
+
+    col.hidden = true
+
+    assert(1 == cnt)
+  }
+
+  test("columnVisibilityChangeListeners, adding and removing a listener") {
+
+    val listener = { e: Grid.ColumnVisibilityChangeEvent => }
+
+    grid.columnVisibilityChangeListeners += listener
+    assert(1 == grid.columnVisibilityChangeListeners.size)
+
+    grid.columnVisibilityChangeListeners -= listener
+    assert(0 == grid.columnVisibilityChangeListeners.size)
   }
 
   test("detailsGenerator") {
