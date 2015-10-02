@@ -2,8 +2,6 @@ package vaadin.scala.converter
 
 import java.util.Date
 
-import vaadin.scala.Wrapper
-import vaadin.scala.converter.mixins.{ DelegatingConverterMixin, ConverterMixin }
 import vaadin.scala.server.Resource
 import com.vaadin.server.{ Resource => VaadinResource }
 
@@ -42,7 +40,7 @@ object DefaultConverterFactory extends ConverterFactory {
       Option(new StringToDoubleConverter)
     else if (classOf[Float].isAssignableFrom(sourceType) || classOf[java.lang.Float].isAssignableFrom(sourceType))
       Option(new StringToFloatConverter)
-    else if (classOf[Integer].isAssignableFrom(sourceType) || classOf[java.lang.Integer].isAssignableFrom(sourceType))
+    else if (classOf[Int].isAssignableFrom(sourceType) || classOf[java.lang.Integer].isAssignableFrom(sourceType))
       Option(new StringToIntegerConverter)
     else if (classOf[Long].isAssignableFrom(sourceType) || classOf[java.lang.Long].isAssignableFrom(sourceType))
       Option(new StringToLongConverter)
