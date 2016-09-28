@@ -7,13 +7,7 @@ resolvers += "sbt-vaadin-plugin repo" at "http://henrikerola.github.io/repositor
 
 addSbtPlugin("org.vaadin.sbt" % "sbt-vaadin-plugin" % "1.2.0")
 
-addSbtPlugin("com.earldouglas" % "xsbt-web-plugin" % "2.0.3")
-
-// sbtidea
-addSbtPlugin("com.github.mpeltonen" % "sbt-idea" % "1.6.0")
-
-// sbteclipse
-addSbtPlugin("com.typesafe.sbteclipse" % "sbteclipse-plugin" % "2.5.0")
+addSbtPlugin("com.earldouglas" % "xsbt-web-plugin" % "2.1.0")
 
 addSbtPlugin("de.johoop" % "jacoco4sbt" % "2.1.1")
 
