@@ -2,13 +2,13 @@ import org.vaadin.sbt.VaadinPlugin._
 
 name := "Scaladin"
 
-version in ThisBuild := "3.2-SNAPSHOT"
+version in ThisBuild := "7.7-SNAPSHOT"
 
 organization in ThisBuild := "org.vaadin.addons"
 
-scalaVersion in ThisBuild := "2.11.7"
+scalaVersion in ThisBuild := "2.11.8"
 
-crossScalaVersions in ThisBuild := Seq("2.11.7")
+crossScalaVersions in ThisBuild := Seq("2.11.8")
 
 scalacOptions in ThisBuild ++= Seq("-deprecation", "-unchecked", "-encoding", "UTF-8")
 

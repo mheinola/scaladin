@@ -10,7 +10,7 @@ object PushConfiguration {
     import com.vaadin.shared.ui.ui.Transport._
 
     val WebSocket = Value(WEBSOCKET.ordinal)
-    val Streaming = Value(STREAMING.ordinal)
+    val WebSocketXRH = Value(WEBSOCKET_XHR.ordinal)
     val LongPolling = Value(LONG_POLLING.ordinal)
   }
 }

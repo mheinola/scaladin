@@ -2,7 +2,7 @@ import sbt._
 
 object Dependencies {
 
-  private val vaadinVersion = "7.5.10"
+  private val vaadinVersion = "7.7.3"
   private val scalaTestVersion = "2.2.4"
   private val mockitoVersion = "1.10.19"
 
