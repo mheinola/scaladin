@@ -2,6 +2,8 @@ import org.vaadin.sbt.VaadinPlugin._
 
 name := "Scaladin"
 
+logLevel := Level.Debug
+
 version in ThisBuild := "7.7-SNAPSHOT"
 
 organization in ThisBuild := "org.vaadin.addons"
@@ -13,8 +15,6 @@ crossScalaVersions in ThisBuild := Seq("2.11.8")
 scalacOptions in ThisBuild ++= Seq("-deprecation", "-unchecked", "-encoding", "UTF-8")
 
 resolvers in ThisBuild += "Vaadin snapshots" at "https://oss.sonatype.org/content/repositories/vaadin-snapshots"
-
-lazy val root = project.in(file(".")).aggregate(addon, demo)
 
 publishMavenStyle := false
 
@@ -56,3 +56,5 @@ lazy val demo = project
     publishTo := Some("Sonatype Nexus Repository Manager" at System.getProperty("nexusRepositoryUrl", "none")),
     credentials += Credentials("Sonatype Nexus Repository Manager", System.getProperty("nexusUrl", "none"), System.getProperty("nexusUser", "none"), System.getProperty("nexusPassword", "none"))
   ).dependsOn(addon)
+
+lazy val root = project.in(file(".")).aggregate(addon, demo)
