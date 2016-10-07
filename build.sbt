@@ -4,7 +4,7 @@ name := "Scaladin"
 
 logLevel := Level.Debug
 
-version in ThisBuild := "7.7-SNAPSHOT"
+version in ThisBuild := "7.6-SNAPSHOT"
 
 organization in ThisBuild := "org.vaadin.addons"
 
