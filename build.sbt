@@ -24,9 +24,9 @@ publishArtifact in Compile := false
 
 pomIncludeRepository := { _ => false }
 
-publishTo := Some("Sonatype Nexus" at System.getProperty("nexusRepositoryUrl", "none"))
+credentials += Credentials("Sonatype Nexus Repository Manager", System.getProperty("nexusUrl", "none"), System.getProperty("nexusUser", "none"), System.getProperty("nexusPassword", "none"))
 
-credentials += Credentials("Sonatype Nexus", System.getProperty("nexusUrl", "none"), System.getProperty("nexusUser", "none"), System.getProperty("nexusPassword", "none"))
+publishTo := Some("snapshots" at System.getProperty("nexusRepositoryUrl", "none"))
 
 lazy val addon = project
   .settings(vaadinAddOnSettings :_*)
@@ -38,8 +38,8 @@ lazy val addon = project
     publishArtifact in Test := false,
     publishArtifact in Compile := true,
     pomIncludeRepository := { _ => false },
-    publishTo := Some("Sonatype Nexus" at System.getProperty("nexusRepositoryUrl", "none")),
-    credentials += Credentials("Sonatype Nexus", System.getProperty("nexusUrl", "none"), System.getProperty("nexusUser", "none"), System.getProperty("nexusPassword", "none"))
+    credentials += Credentials("Sonatype Nexus Repository Manager", System.getProperty("nexusUrl", "none"), System.getProperty("nexusUser", "none"), System.getProperty("nexusPassword", "none")),
+    publishTo := Some("snapshots" at System.getProperty("nexusRepositoryUrl", "none"))
   )
 
 lazy val demo = project
@@ -53,8 +53,8 @@ lazy val demo = project
     publishArtifact in Test := false,
     publishArtifact in Compile := false,
     pomIncludeRepository := { _ => false },
-    publishTo := Some("Sonatype Nexus" at System.getProperty("nexusRepositoryUrl", "none")),
-    credentials += Credentials("Sonatype Nexus", System.getProperty("nexusUrl", "none"), System.getProperty("nexusUser", "none"), System.getProperty("nexusPassword", "none"))
+    credentials += Credentials("Sonatype Nexus Repository Manager", System.getProperty("nexusUrl", "none"), System.getProperty("nexusUser", "none"), System.getProperty("nexusPassword", "none")),
+    publishTo := Some("snapshots" at System.getProperty("nexusRepositoryUrl", "none"))
   ).dependsOn(addon)
 
 lazy val root = project.in(file(".")).aggregate(addon, demo)
