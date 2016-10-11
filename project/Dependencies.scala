@@ -2,7 +2,7 @@ import sbt._
 
 object Dependencies {
 
-  private val vaadinVersion = "7.6.8"
+  private val vaadinVersion = "7.7.3"
   private val scalaTestVersion = "2.2.4"
   private val mockitoVersion = "1.10.19"
 
@@ -19,8 +19,8 @@ object Dependencies {
   def addonDeps(scalaVersion: String) = Seq(
     scalaReflect(scalaVersion),
     vaadin,
-    servletApi,
-    portletApi,
+    servletApi % "provided",
+    portletApi % "provided",
     scalaTest % "test",
     junitInterface % "test->default",
     mockito % "test"

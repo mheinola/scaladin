@@ -4,7 +4,7 @@ name := "Scaladin"
 
 logLevel := Level.Debug
 
-version in ThisBuild := "7.6-SNAPSHOT"
+version in ThisBuild := "7.7-SNAPSHOT"
 
 organization in ThisBuild := "org.vaadin.addons"
 
@@ -13,6 +13,8 @@ scalaVersion in ThisBuild := "2.11.8"
 crossScalaVersions in ThisBuild := Seq("2.11.8")
 
 scalacOptions in ThisBuild ++= Seq("-deprecation", "-unchecked", "-encoding", "UTF-8")
+
+javacOptions in Compile ++= Seq("-encoding", "UTF-8")
 
 resolvers in ThisBuild += "Vaadin snapshots" at "https://oss.sonatype.org/content/repositories/vaadin-snapshots"
 
